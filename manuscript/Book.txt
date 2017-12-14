@@ -1,3 +1,1 @@
-Preface.md
-Leanpub Book Format.md
-chapter1.txt
+chapterone.txt
