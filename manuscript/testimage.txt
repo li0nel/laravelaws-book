@@ -21,7 +21,9 @@ This section shows how you include an image.  Note that the names of the chapter
 
 ![Leanpub Logo](/images/LeanpubLogo.png)
 
-![Leanpub Logo](/images/logo.png)
+![Leanpub Logo](logo.png)
+
+![Leanpub Logo](images/logo.png)
 
 That's it!
 
