@@ -3,7 +3,7 @@
 ## **A guide to networking, security, autoscaling and high-availability**
 
 
-It's not an easy task to setup a durable architecture for your web application. And if you try to build it as you go, you'll soon get tired of clicking around the AWS console. What if you had one go-to architecture and repeatable process for all your projects, while ensuring maximum security, performance and availability? Here is how you should deploy your Laravel application on AWS.
+It's not an easy task to setup a durable architecture for your web application. And if you try to build it as you go, you'll soon get tired of clicking around the AWS console. What if you had one go-to architecture and repeatable process for all your projects, while ensuring maximum security, performance and availability? Here is how you should deploy your Laravel application on AWS$$$.
 
 
 ## **How we will enforce security:**
