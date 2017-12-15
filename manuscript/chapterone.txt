@@ -1,44 +1,45 @@
 # **Laravel on AWS: a reference architecture**
+
 ## **A guide to networking, security, autoscaling and high-availability**
 
 
-It\u2019s not an easy task to setup a durable architecture for your web application. And if you try to build it as you go, you\u2019ll soon get tired of clicking around the AWS console. What if you had one go-to architecture and repeatable process for all your projects, while ensuring maximum security, performance and availability? Here is how you should deploy your Laravel application on AWS.
+It's not an easy task to setup a durable architecture for your web application. And if you try to build it as you go, you'll soon get tired of clicking around the AWS console. What if you had one go-to architecture and repeatable process for all your projects, while ensuring maximum security, performance and availability? Here is how you should deploy your Laravel application on AWS.
 
 
 ## **How we will enforce security:**
 
 
-\u2014Create *VPC subnets* to deploy our application into. A VPC is your own virtual network within AWS and lets you design private subnets where instances can\u2019t be accessed directly from outside your VPC. This is where we will deploy our web and database instances.
+-Create *VPC subnets* to deploy our application into. A VPC is your own virtual network within AWS and lets you design private subnets where instances can't be accessed directly from outside your VPC. This is where we will deploy our web and database instances.
 
 
-\u2014Use temporary *bastions* (also called jump boxes) that we will deploy in our public subnets when we need to connect to web and database instances, reducing the surface of attack
+-Use temporary *bastions* (also called jump boxes) that we will deploy in our public subnets when we need to connect to web and database instances, reducing the surface of attack
 
 
-\u2014Enforce firewalls rules by whitelisting which servers can talk to each other, using *VPC security groups (SGs)*. SGs are default-deny stateful firewalls applied at the instance level.
+-Enforce firewalls rules by whitelisting which servers can talk to each other, using *VPC security groups (SGs)*. SGs are default-deny stateful firewalls applied at the instance level.
 
 
-\u2014Simplify secret management by avoiding passwords when possible and instead specifying *IAM roles* to control access to our resources. Using IAM roles for EC2 removes the need to store AWS credentials in a configuration file. Roles use temporary security tokens under the hood which AWS takes care of rotating so we don\u2019t have to worry about updating passwords.
+-Simplify secret management by avoiding passwords when possible and instead specifying *IAM roles* to control access to our resources. Using IAM roles for EC2 removes the need to store AWS credentials in a configuration file. Roles use temporary security tokens under the hood which AWS takes care of rotating so we don't have to worry about updating passwords.
 
 
 ## **How we will enforce high availability:**
 
 
-\u2014Span our application instances across Availability Zones (AZs below). An AZ is one or more data centers within a region that are designed to be isolated from failures in other AZs. By placing resources in separate AZs, orgnisations can protect their application from a service disruption impacting a single location
+-Span our application instances across Availability Zones (AZs below). An AZ is one or more data centers within a region that are designed to be isolated from failures in other AZs. By placing resources in separate AZs, orgnisations can protect their application from a service disruption impacting a single location
 
 
-\u2014Serve our application from an Elastic Load Balancer. ELB is a highly available (distributed) service that distributes traffic across a group of EC2 instances in one or more AZs. ELB supports *health checks* to ensure traffic is not routed to unhealthy or failing instances
+-Serve our application from an Elastic Load Balancer. ELB is a highly available (distributed) service that distributes traffic across a group of EC2 instances in one or more AZs. ELB supports *health checks* to ensure traffic is not routed to unhealthy or failing instances
 
 
-\u2014Host our application on ECS, describing through *ECS services* what minimum number of healthy application containers should be running at any given time. ECS services will start new containers if one ever crashes.
+-Host our application on ECS, describing through *ECS services* what minimum number of healthy application containers should be running at any given time. ECS services will start new containers if one ever crashes.
 
 
-\u2014Distribute our database as a cluster across multiple AZs. RDS allows you to place a secondary copy of your database in another AZ for disaster recovery purpose. You are assigned a database endpoint in the form of a DNS name that AWS takes responsibility for resolving to a specific IP address. RDS will automatically fail over to the standby instance without user intervention. Preferably we will be using Amazon Aurora, which will maintain a read replica of our database in a separate AZ and that Amazon will promote as the primary instance should our main instance (or its AZ) fail.
+-Distribute our database as a cluster across multiple AZs. RDS allows you to place a secondary copy of your database in another AZ for disaster recovery purpose. You are assigned a database endpoint in the form of a DNS name that AWS takes responsibility for resolving to a specific IP address. RDS will automatically fail over to the standby instance without user intervention. Preferably we will be using Amazon Aurora, which will maintain a read replica of our database in a separate AZ and that Amazon will promote as the primary instance should our main instance (or its AZ) fail.
 
 
-\u2014Finally, we rely on as many *distributed services* as possible to delegate failure management to AWS: services like S3, SQS, ELB/ALB, ECR and CloudWatch are designed for maximum resiliency without us having to care for the instances they run on.
+-Finally, we rely on as many *distributed services* as possible to delegate failure management to AWS: services like S3, SQS, ELB/ALB, ECR and CloudWatch are designed for maximum resiliency without us having to care for the instances they run on.
 
 
-! [Laravel, made highly available with almost a one-click deploy!] (images/fig01.png)
+![Laravel, made highly available with almost a one-click deploy!](images/fig01.png)
 
 
 ## **How we will build ourselves a repeatable process:**
@@ -56,19 +57,22 @@ With the AWS CLI, you can control all services from the command line and automat
 By combining all three, both our infrastructure and our application configuration can be written as code and as such be versioned, branched, documented.
 
 
-*This is the procedure I use to deploy my clients\u2019 Laravel applications on AWS. I hope this can be helpful to deploy yours. If your use case is more complex, I provide on-going support packages ranging from mentoring your developers up to hands-on building your application on AWS. Ping me at [hi@getlionel.com](mailto:hi@getlionel.com)*
+*This is the procedure I use to deploy my clients' Laravel applications on AWS. I hope this can be helpful to deploy yours. If your use case is more complex, I provide on-going support packages ranging from mentoring your developers up to hands-on building your application on AWS. Ping me at [hi@getlionel.com](mailto:hi@getlionel.com)*
 
 
-## **Let\u2019s do it step by step:**
+## **Let's do it step by step:**
+
+
 ## **1. Setup your AWS credentials**
 
 
 Start with authenticating your command line by downloading the API key and secret for a new user in the IAM section of your AWS console. This user will need to have to have permissions to create resources for all the services we will use below. Follow the prompts from:
 
 
-{line-numbers=on,starting-line-number=1}
-> `aws configure`
-> 
+```no-highlight
+       aws configure
+```
+
 C> `Use the profile option to save different credentials for different projects`
 
 
@@ -81,19 +85,19 @@ We need two certificates: one for our web application itself and another one for
 AWS SSL/TLS certificates are free, automatically provisioned and renewed, even if you did not buy your domain in Route53. They seamlessly integrate with AWS load balancers, CloudFront distributions and API Gateway endpoints so you can just set them and forget them.
 
 
-{line-numbers=on,starting-line-number=1}
-> `\u0023 a certificate in your default region for your web application`
-> `aws acm request-certificate`
->> `\u002D\u002Ddomain-name [laravelaws.com](http://laravelaws.com)`
->> `\u002D\u002Didempotency-token=random_string_here`
->> `\u002D\u002Dsubject-alternative-names \u002A.[laravelaws.com](http://laravelaws.com)`
->
-> `\u0023 a certificate from us-east-1 specifically for our CloudFront custom domain`
-> `aws \u002D\u002Dregion us-east-1 acm request-certificate`
->> `\u002D\u002Ddomain-name [laravelaws.com](http://laravelaws.com)`
->> `\u002D\u002Didempotency-token=random_string_here`
->> `\u002D\u002Dsubject-alternative-names \u002A.[laravelaws.com](http://laravelaws.com)`
+```no-highlight
+       # a certificate in your default region for your web application
+       aws acm request-certificate
+                       --domain-name [laravelaws.com](http://laravelaws.com)
+                       --idempotency-token=random_string_here
+                       --subject-alternative-names *.[laravelaws.com](http://laravelaws.com)
 
+        # a certificate from us-east-1 specifically for our CloudFront custom domain
+        aws --region us-east-1 acm request-certificate
+                       --domain-name [laravelaws.com](http://laravelaws.com)
+                       --idempotency-token=random_string_here
+                       --subject-alternative-names *.[laravelaws.com](http://laravelaws.com)
+```
 
 ## **3. Create a key pair to be used by your EC2 instances**
 
@@ -101,18 +105,18 @@ AWS SSL/TLS certificates are free, automatically provisioned and renewed, even i
 It is recommended to create a new SSH key pair for all EC2 instances of this new project, still using the CLI:
 
 
-{line-numbers=on,starting-line-number=1}
-> `\u0023 Create the key pair and extract the private key from the JSON response`
-> `aws ec2 create-key-pair`
->> `\u002D\u002Dkey-name=laravelaws`
->> `\u002D\u002Dquery 'KeyMaterial'`
->> `\u002D\u002Doutput text \u003E laravelaws.pem`
->
-> `\u0023 Assign appropriate permissions to the key file for it to be usable`
->> `chmod 400 laravelaws.pem`
+```no-highlight
+       # Create the key pair and extract the private key from the JSON response
+       aws ec2 create-key-pair
+                      --key-name=laravelaws
+                      --query 'KeyMaterial'
+                      --output text &#62; laravelaws.pem
 
+       # Assign appropriate permissions to the key file for it to be usable
+       chmod 400 laravelaws.pem
+```
 
-Remember that AWS won\u2019t store SSH keys for you and you are responsible for storing and sharing them securely.
+Remember that AWS won't store SSH keys for you and you are responsible for storing and sharing them securely.
 
 
 ## **4. Launch our CloudFormation stacks**
@@ -123,18 +127,18 @@ Here comes the infrastructure-as-code! Our whole deployment will be described in
 
 This is the directory structure of our templates:
 
-
-> \u007C\u002D\u002D master.yaml
-> \u007C\u002D\u002D infrastructure
->> \u007C\u002D\u002D vpc.yaml
->> \u007C\u002D\u002D storage.yaml
->> \u007C\u002D\u002D web.yaml
->> \u007C\u002D\u002D services.yaml
-> \u0023 *the root template*
-> \u0023 *our VPC and security groups*
-> \u0023 *our database cluster and S3 bucket*
-> \u0023 *our ECS cluster*
-> \u0023 *our ECS Tasks Definitions \u0026 Services*
-
+```no-highlight
+      |-- master.yaml
+      |-- infrastructure
+                 |-- vpc.yaml
+                 |-- storage.yaml
+                 |-- web.yaml
+                 |-- services.yaml
+      # *the root template*
+      # *our VPC and security groups*
+      # *our database cluster and S3 bucket*
+      # *our ECS cluster*
+      # *our ECS Tasks Definitions &#38; Services*
+```
 
 And the complete code can be downloaded from GitHub here:
