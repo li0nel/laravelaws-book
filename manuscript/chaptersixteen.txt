@@ -1,7 +1,0 @@
-# **16. (Optional) Setup SES and a mail server**
-
-
-If you&rsquo;ve bought your domain name from Route53 instead of another domain name registrar, you don&rsquo;t have a mail service ie you can&rsquo;t receive emails on your new domain name. AWS has no other solution for you than letting you host a mail server on an EC2 instance and get your MX records to point at it, or to setup a custom Lambda function to redirect your incoming emails to GMail for example.
-
-
-*Coming soon*
