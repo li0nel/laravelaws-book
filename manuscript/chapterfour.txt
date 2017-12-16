@@ -5,12 +5,12 @@ Here comes the infrastructure-as-code! Our whole deployment will be described in
 
 
 ```no-highlight
-   |--- master.yaml             *&ash; the root template*
+   |--- master.yaml             *# the root template*
    |--- infrastructure          
-      |--- vpc.yaml             *&ash; our VPC and security groups*
-      |--- storage.yaml         *&ash; our database cluster and S3 bucket*
-      |--- web.yaml             *&ash; our ECS cluster*
-      |--- services.yaml        *&ash; our ECS Tasks Definitions &amp;*
+      |--- vpc.yaml             *# our VPC and security groups*
+      |--- storage.yaml         *# our database cluster and S3 bucket*
+      |--- web.yaml             *# our ECS cluster*
+      |--- services.yaml        *# our ECS Tasks Definitions &amp;*
    *Services*
 ```
 
@@ -24,7 +24,7 @@ A>
 A> [github.com](https://github.com/)
 
 
-A>![](images/fig02.jpeg)
+![](images/fig02.jpeg)
 
 
 The *vpc.yaml* template defines our *VPC subnets* and *route tables*:
@@ -36,7 +36,7 @@ The *vpc.yaml* template defines our *VPC subnets* and *route tables*:
    # thanks to a route table routing traffic through the Internet Gateway.
    # Private subnets feature a NAT Gateway located in the public subnet of the same AZ, so they can receive traffic
    # from within the VPC.
-   VPC:
+   <VPC:>
       Type: AWS::EC2::VPC
       Properties:
          CidrBlock: !Ref VpcCIDR
