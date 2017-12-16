@@ -22,6 +22,8 @@ A>
 A> laravelaws - A reference architecture to deploy Laravel on AWS
 A>
 A> [github.com](https://github.com/)
+
+
 A> {width=60%,float=inside}
 A> ![](images/fig02.jpeg)
 
