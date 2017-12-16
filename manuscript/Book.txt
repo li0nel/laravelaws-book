@@ -11,6 +11,7 @@ chapternine.txt
 chapterten.txt
 chaptereleven.txt
 chaptertwelve.txt
+chapterthirteen.txt
 chapterfourteen.txt
 chapterfifteen.txt
 chaptersixteen.txt
