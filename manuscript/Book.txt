@@ -18,4 +18,3 @@ chaptersixteen.txt
 chapterseventeen.txt
 chaptereighteen.txt
 Preface.md
-Leanpub Book Format.md
