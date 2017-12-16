@@ -1,22 +1,4 @@
 intro.txt
-chapterone.txt
-chaptertwo.txt
-chapterthree.txt
-chapterfour.txt
-chapterfive.txt
-chaptersix.txt
-chapterseven.txt
-chaptereight.txt
-chapternine.txt
-chapterten.txt
-chaptereleven.txt
-chaptertwelve.txt
-chapterthirteen.txt
-chapterfourteen.txt
-chapterfifteen.txt
-chaptersixteen.txt
-chapterseventeen.txt
-chaptereighteen.txt
 sample.txt
 Leanpub Book Format.md
 Preface.md
