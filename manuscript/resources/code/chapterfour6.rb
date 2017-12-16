@@ -1,0 +1,77 @@
+   # I recommend to encrypt your database to make sure your snapshots and logs are encrypted too.
+   # Automatic snapshots are stored by AWS itself, however manual snapshots will be stored in your S3 account.
+   # You don't want to accidentally open access to an unencrypted version of your data!
+   # It is also preferable not to use your default AWS master key if you ever need to transfer a snapshot to another
+   # AWS account later as you can't give cross-account access to your master key.
+   #
+   # Not that we only create one primary DB instance for now, no read replica.
+   KmsKey:
+       Type: AWS::KMS::Key
+      Properties:
+          Description: !Sub KMS Key for our ${AWS::StackName} DB
+          KeyPolicy:
+              Id: !Ref AWS::StackName
+              Version: "2012-10-17"
+              Statement:
+                  -
+
+                      Sid: "Allow administration of the key"
+                      Effect: "Allow"
+                      Action:
+                          - kms:Create*
+                          - kms:Describe*
+                          - kms:Enable*
+                          - kms:List*
+                          - kms:Put*
+                          - kms:Update*
+                          - kms:Revoke*
+                          - kms:Disable*
+                          - kms:Get*
+                          - kms:Delete*
+                          - kms:ScheduleKeyDeletion
+                          - kms:CancelKeyDeletion
+                      Principal:
+                          AWS: !Ref AWS::AccountId
+                      Resource: '*'
+                  -
+                      Sid: "Allow use of the key"
+                      Effect: "Allow"
+                      Principal:
+                          AWS: !Ref AWS::AccountId
+                      Action:
+                          - "kms:Encrypt"
+                          - "kms:Decrypt"
+                          - "kms:ReEncrypt*"
+                          - "kms:GenerateDataKey*"
+                          - "kms:DescribeKey"
+                      Resource: "*"
+
+   DatabaseSubnetGroup:
+      Type: AWS::RDS::DBSubnetGroup
+      Properties:
+          DBSubnetGroupDescription: CloudFormation managed DB subnet group.
+          SubnetIds: !Ref DatabaseSubnets
+
+   DatabaseCluster:
+      Type: AWS::RDS::DBCluster
+      Properties:
+          Engine: aurora
+          DatabaseName: !Ref DatabaseName
+          MasterUsername: !Ref DatabaseUsername
+          MasterUserPassword: !Ref DatabasePassword
+          BackupRetentionPeriod: 7
+          PreferredBackupWindow: 01:00-02:30
+          PreferredMaintenanceWindow: mon:03:00-mon:04:00
+          DBSubnetGroupName: !Ref DatabaseSubnetGroup
+          KmsKeyId: !GetAtt KmsKey.Arn
+          StorageEncrypted: true
+          VpcSecurityGroupIds:
+            - !Ref DatabaseSecurityGroup
+
+   DatabasePrimaryInstance:
+      Type: AWS::RDS::DBInstance
+      Properties:
+          Engine: aurora
+          DBClusterIdentifier: !Ref DatabaseCluster
+          DBInstanceClass: !Ref DatabaseInstanceType
+          DBSubnetGroupName: !Ref DatabaseSubnetGroup
