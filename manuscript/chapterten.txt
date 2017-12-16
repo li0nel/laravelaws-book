@@ -1,0 +1,11 @@
+# **10. (Optional) Add an ElasticSearch domain**
+
+
+Most web applications would need a search engine like ElasticSearch. This is how you can create a managed ES cluster with CloudFormation.
+
+
+![](code/chapterten1.rb)
+
+
+C> `Note that we only allow ingress traffic from both our NAT gateway IPs, ie only instances from our private subnets`
+
