@@ -4,7 +4,7 @@
 Add a CloudFront distribution in your CloudFormation template and update your stack:
 
 
-```
+```no-highlight
    CloudFrontDistribution:
        Type: AWS::CloudFront::Distribution
        Properties:
@@ -36,7 +36,7 @@ Add a CloudFront distribution in your CloudFormation template and update your st
 You will need to create beforehand a CloudFront Origin Access Identity, which is a special CloudFront user who will be able query objects in your S3 bucket:
 
 
-```
+```no-highlight
    aws cloudfront create-cloud-front-origin-access-identity
        --cloud-front-origin-access-identity-config CallerReference=random_string_here,Comment=
 ```
@@ -45,7 +45,7 @@ You will need to create beforehand a CloudFront Origin Access Identity, which is
 Create an ALIAS record to point *files.yourdomain.com* to your CF distribution:
 
 
-```
+```no-highlight
    # Add an ALIAS record to ELB URL
    aws?route53 change-resource-record-sets?
        --hosted-zone-id /hostedzone/YOUR_HOSTED_ZONE_ID
@@ -64,14 +64,14 @@ Create an ALIAS record to point *files.yourdomain.com* to your CF distribution:
            }
         }
      ]
-  }'
+   }'
 ```
 
 
 Add a *sub_filter* Nginx directive to rewrite all URLs to your S3 buckets as links to your CF distribution instead.
 
 
-```
+```no-highlight
    location ~ \.php$ {
        root /var/www/html/public;
        fastcgi_cache cache_key;
@@ -81,16 +81,16 @@ Add a *sub_filter* Nginx directive to rewrite all URLs to your S3 buckets as lin
        fastcgi_cache_lock on;
        fastcgi_cache_lock_timeout 10s;
   
-      add_header X-Proxy-Cache $upstream_cache_status;
+       add_header X-Proxy-Cache $upstream_cache_status;
  
-      sub_filter_types *;
-      sub_filter_once off;
-      sub_filter 'laravelaws-bucket-jjua0wgxhi7i.s3-ap-southeast-2.amazonaws.com' 'files.laravelaws.com';
+       sub_filter_types *;
+       sub_filter_once off;
+       sub_filter 'laravelaws-bucket-jjua0wgxhi7i.s3-ap-southeast-2.amazonaws.com' 'files.laravelaws.com';
  
-      fastcgi_pass   app:9000;
-      fastcgi_index  index.php;
-      fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
-      fastcgi_read_timeout 900s;
-      include        fastcgi_params;
-  }
+       fastcgi_pass   app:9000;
+       fastcgi_index  index.php;
+       fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
+       fastcgi_read_timeout 900s;
+       include        fastcgi_params;
+   }
 ```

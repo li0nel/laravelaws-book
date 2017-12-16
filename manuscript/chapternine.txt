@@ -7,7 +7,7 @@ Well done! Our Laravel application is now highly available in the cloud. This st
 For the worker jobs, we create an SQS queue using CloudFormation, for the front-end to dispatch jobs to our workers in the background:
 
 
-```
+```no-highlight
    # That's all it takes to create a queue in CloudFormation
    # CloudFormation will assign a unique name to it, that we
    # will pass to our Laravel containers
@@ -29,7 +29,7 @@ For the worker jobs, we create an SQS queue using CloudFormation, for the front-
 Finally we create two more tasks definitions in CloudFormation by starting from the same Laravel Docker image, same environment variables, but just overriding the Docker CMD (i.e. the command executed by Docker when the container starts):
 
 
-```
+```no-highlight
    # The worker containers simply execute the Laravel artisan queue:work
    # command instead of php-fpm
    TaskDefinitionWorker:
@@ -55,13 +55,13 @@ Finally we create two more tasks definitions in CloudFormation by starting from 
                     Value: Laravel
                     ......
  
-  # The cron container command is a bit more intricate
-  # since we need to load the container's environment
-  # variables in the same console session context than cron
-  # for Laravel to use them
-  TaskDefinitionCron:
-      Type: AWS::ECS::TaskDefinition
-      Properties:
+   # The cron container command is a bit more intricate
+   # since we need to load the container's environment
+   # variables in the same console session context than cron
+   # for Laravel to use them
+   TaskDefinitionCron:
+       Type: AWS::ECS::TaskDefinition
+       Properties:
           Family: laravel-cron
           ContainerDefinitions:
               - Name: app
@@ -87,10 +87,10 @@ Finally we create two more tasks definitions in CloudFormation by starting from 
 The crontab file we use to call the artisan scheduler loads the container&rsquo;s environment variables in the cron console session. If you don&rsquo;t Laravel won&rsquo;t see your container&rsquo;s env vars when called from the cron.
 
 
-```
+```no-highlight
    * * * * * root . /etc/cron.d/project_env.sh ; /usr/local/bin/php /var/www/html/artisan schedule:run &> /var/log/cron.log
    # An empty line is required at the end of this file for a valid cron file.
-
 ```
+
 
 That&rsquo;s it! We now have in our cluster a mix of Laravel front-end containers (*php-fpm* with Nginx as a reverse proxy), Laravel workers and one cron.

@@ -4,7 +4,7 @@
 To create your CloudFormation stack the first time, use the below command:
 
 
-```
+```no-highlight
    # Create your CloudFormation stack from scratch using the create-stack command
    aws cloudformation create-stack
        --stack-name=laravel

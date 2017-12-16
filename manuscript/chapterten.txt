@@ -4,7 +4,7 @@
 Most web applications would need a search engine like ElasticSearch. This is how you can create a managed ES cluster with CloudFormation.
 
 
-```
+```no-highlight
    Elasticsearch:
        Type: AWS::Elasticsearch::Domain
        Properties:

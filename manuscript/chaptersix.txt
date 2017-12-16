@@ -4,7 +4,7 @@
 A bastion (also called jump box) is a temporary EC2 instance that we will place in a public subnet of our VPC. It will enable us to SSH into it from outside the VPC and from there still being able to access our instances (including database instances) in private subnets. When creating the bastion, make sure to associate to it the SG allowing access to the database.
 
 
-```
+```no-highlight
    aws ec2 run-instances
        --image-id ami-c1a6bda2
        --key-name laravelaws            # the SSH key pair we created earlier
@@ -18,7 +18,7 @@ A bastion (also called jump box) is a temporary EC2 instance that we will place 
 C>Launch one bastion, to be deleted once we&rsquo;re done.
 
 
-```
+```no-highlight
    # Add your key to your SSH agent
    ssh-add -K laravelaws.pem
 
@@ -33,8 +33,11 @@ C>Launch one bastion, to be deleted once we&rsquo;re done.
    ssh ec2-user@<instance-private-IP-address>
 ```
 
+
 C>You&rsquo;re now connected to an instance inside your VPC private subnets without copying keys around
-```
+
+
+```no-highlight
    # Use the Docker exec command to execute the Artisan commands inside the application container
    docker exec -it CONTAINER_ID php artisan session:table
    docker exec -it CONTAINER_ID php artisan migrate?--force
@@ -44,7 +47,7 @@ C>You&rsquo;re now connected to an instance inside your VPC private subnets with
 The bastion can also be a host for a SSH tunnel between our machine and our public subnet so we can connect a local mysql/pgsql client to our remote database. Below is an example for PostgreSQL:
 
 
-```
+```no-highlight
    # create a SSH tunnel to RDS through your bastion:
    ssh -L 54320:your_rds_database_endpoint_here.your_region_here.rds.amazonaws.com:5432
        ec2-user@<bastion_public_ip>

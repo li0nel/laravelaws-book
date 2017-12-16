@@ -4,7 +4,7 @@
 Below we setup CPU, memory and replication alarms for our database:
 
 
-```
+```no-highlight
    StackAlarmTopic:
        Type: AWS::SNS::Topic
        Properties:
@@ -31,9 +31,9 @@ Below we setup CPU, memory and replication alarms for our database:
           InsufficientDataActions:
               - Ref: StackAlarmTopic
  
-  DatabaseReplicaCPUAlarm:
-      Type: AWS::CloudWatch::Alarm
-      Properties:
+   DatabaseReplicaCPUAlarm:
+       Type: AWS::CloudWatch::Alarm
+       Properties:
           AlarmDescription: Replica database CPU utilization is over 80%.
           Namespace: AWS/RDS
           MetricName: CPUUtilization
@@ -52,9 +52,9 @@ Below we setup CPU, memory and replication alarms for our database:
           InsufficientDataActions:
               - Ref: StackAlarmTopic
  
-  DatabasePrimaryMemoryAlarm:
-      Type: AWS::CloudWatch::Alarm
-      Properties:
+   DatabasePrimaryMemoryAlarm:
+       Type: AWS::CloudWatch::Alarm
+       Properties:
           AlarmDescription: Primary database freeable memory is under 700MB.
           Namespace: AWS/RDS
           MetricName: FreeableMemory
@@ -73,9 +73,9 @@ Below we setup CPU, memory and replication alarms for our database:
           InsufficientDataActions:
               - Ref: StackAlarmTopic
  
-  DatabasePrimaryReplicationAlarm:
-      Type: AWS::CloudWatch::Alarm
-      Properties:
+   DatabasePrimaryReplicationAlarm:
+       Type: AWS::CloudWatch::Alarm
+       Properties:
           AlarmDescription: Database replication latency is over 200ms.
           Namespace: AWS/RDS
           MetricName: AuroraReplicaLag
@@ -92,9 +92,9 @@ Below we setup CPU, memory and replication alarms for our database:
           AlarmActions:
               - Ref: StackAlarmTopic
  
-  DatabaseReplicaReplicationAlarm:
-      Type: AWS::CloudWatch::Alarm
-      Properties:
+   DatabaseReplicaReplicationAlarm:
+       Type: AWS::CloudWatch::Alarm
+       Properties:
           AlarmDescription: Database replication latency is over 200ms.
           Namespace: AWS/RDS
           MetricName: AuroraReplicaLag
@@ -104,11 +104,11 @@ Below we setup CPU, memory and replication alarms for our database:
           EvaluationPeriods: 2
           Threshold: 200
           ComparisonOperator: GreaterThanOrEqualToThreshold
-         Dimensions:
+          Dimensions:
              - Name: DBInstanceIdentifier
                Value:
                    Ref: DatabaseReplicaInstance
-         AlarmActions:
+          AlarmActions:
              - Ref: StackAlarmTopic
 ```
 
@@ -116,7 +116,7 @@ Below we setup CPU, memory and replication alarms for our database:
 And for the ECS instances:
 
 
-```
+```no-highlight
    AlarmTopic:
        Type: AWS::SNS::Topic
        Properties:
@@ -132,8 +132,8 @@ And for the ECS instances:
           Threshold: '50'
           AlarmDescription: Alarm if CPU too high or metric disappears indicating instance is down
           Period: '60'
-  #            AlarmActions:
-  #                - Ref: ScaleUpPolicy
+   #            AlarmActions:
+   #                - Ref: ScaleUpPolicy
           AlarmActions:
               - Ref: AlarmTopic
           Namespace: AWS/EC2

@@ -58,7 +58,7 @@ With the AWS CLI, you can control all services from the command line and automat
 By combining all three, both our infrastructure and our application configuration can be written as code and as such be versioned, branched, documented.
 
 
-*This is the procedure I use to deploy my clients&rsquo; Laravel applications on AWS. I hope this can be helpful to deploy yours. If your use case is more complex, I provide on-going support packages ranging from mentoring your developers up to hands-on building your application on AWS. Ping me at hi@getlionel.com*
+*This is the procedure I use to deploy my clients&rsquo; Laravel applications on AWS. I hope this can be helpful to deploy yours. If your use case is more complex, I provide on-going support packages ranging from mentoring your developers up to hands-on building your application on AWS. Ping me at [hi@getlionel.com](mailto:hi@getlionel.com)*
 
 
 ## **Let&rsquo;s do it step by step:**
