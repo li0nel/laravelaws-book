@@ -11,6 +11,7 @@ chapterten.txt
 chaptereleven.txt
 chaptertwelve.txt
 chapterthirteen.txt
+chapterfourteen.txt
 sample.txt
 Leanpub Book Format.md
 Preface.md
