@@ -1,0 +1,15 @@
+# **12. CloudWatch alarms**
+
+
+Below we setup CPU, memory and replication alarms for our database:
+
+
+![](code/chaptertwelve1.rb)
+
+
+And for the ECS instances:
+
+
+![](code/chaptertwelve2.rb)
+
+
