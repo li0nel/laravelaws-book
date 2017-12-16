@@ -1,0 +1,11 @@
+# **3. Create a key pair to be used by your EC2 instances**
+
+
+It is recommended to create a new SSH key pair for all EC2 instances of this new project, still using the CLI:
+
+
+![](code/chapterthree.rb)
+
+
+Remember that AWS won&rsquo;t store SSH keys for you and you are responsible for storing and sharing them securely.
+
