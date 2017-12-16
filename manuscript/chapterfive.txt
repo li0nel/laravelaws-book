@@ -1,0 +1,352 @@
+# **5. Build and push your Laravel Docker image**
+
+
+In the previous step, we created one ECR registry to store both the Docker image of our Laravel application and the one of our Nginx server. ECRs are standard Docker registries which you authenticate to using tokens, that the AWS CLI can generate for us:
+
+
+
+```
+   # The get-login command outputs the "docker login" command you need to execute with a temporary token
+   # You can run both directly using eval
+   # The --no-include-email tells get-login not to return the -e option that does not work for all of Docker versions
+   eval $(aws ecr get-login?--no-include-email)
+```
+
+
+Below are the two Dockerfiles we use to build our Docker images:
+
+
+```
+   FROM php:7.1-fpm
+
+   # Update packages and install composer and PHP dependencies.
+   RUN apt-get update && \
+     DEBIAN_FRONTEND=noninteractive apt-get install -y \
+       postgresql-client \
+       libpq-dev \
+       libfreetype6-dev \
+       libjpeg62-turbo-dev \
+      libmcrypt-dev \
+      libpng12-dev \
+      libbz2-dev \
+      php-pear \
+      cron \
+      && pecl channel-update pecl.php.net \
+      && pecl install apcu
+ 
+  # PHP Extensions
+  RUN docker-php-ext-install mcrypt zip bz2 mbstring pdo pdo_pgsql pdo_mysql pcntl \
+  && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+  && docker-php-ext-install gd
+ 
+  # Memory Limit
+  RUN echo "memory_limit=2048M" > $PHP_INI_DIR/conf.d/memory-limit.ini
+  RUN echo "max_execution_time=900" >> $PHP_INI_DIR/conf.d/memory-limit.ini
+  RUN echo "extension=apcu.so" > $PHP_INI_DIR/conf.d/apcu.ini
+  RUN echo "post_max_size=20M" >> $PHP_INI_DIR/conf.d/memory-limit.ini
+  RUN echo "upload_max_filesize=20M" >> $PHP_INI_DIR/conf.d/memory-limit.ini
+ 
+  # Time Zone
+  RUN echo "date.timezone=${PHP_TIMEZONE:-UTC}" > $PHP_INI_DIR/conf.d/date_timezone.ini
+ 
+  # Display errors in stderr
+  RUN echo "display_errors=stderr" > $PHP_INI_DIR/conf.d/display-errors.ini
+ 
+  # Disable PathInfo
+  RUN echo "cgi.fix_pathinfo=0" > $PHP_INI_DIR/conf.d/path-info.ini
+ 
+  # Disable expose PHP
+  RUN echo "expose_php=0" > $PHP_INI_DIR/conf.d/path-info.ini
+ 
+  # Install Composer
+  RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+ 
+  ADD . /var/www/html
+  WORKDIR /var/www/html
+ 
+  RUN mkdir storage/logs
+  RUN touch storage/logs/laravel.log
+  RUN chmod 777 storage/logs/laravel.log
+ 
+  RUN composer install
+  RUN php artisan optimize --force
+  # RUN php artisan route:cache
+ 
+  RUN chmod -R 777 /var/www/html/storage
+ 
+  RUN touch /var/log/cron.log
+ 
+  ADD deploy/cron/artisan-schedule-run /etc/cron.d/artisan-schedule-run
+  RUN chmod 0644 /etc/cron.d/artisan-schedule-run
+  RUN chmod +x /etc/cron.d/artisan-schedule-run
+ 
+  # CMD ["php-fpm"]
+ 
+  CMD ["/bin/sh", "-c", "php-fpm -D | tail -f storage/logs/laravel.log"],
+```
+
+
+We install *cron* here so we can reuse the same image for our Laravel scheduled tasks and our Laravel workers
+
+
+```no-highlight
+   FROM nginx
+
+   ADD deploy/nginx/nginx.conf /etc/nginx/
+   ADD deploy/nginx/default.conf /etc/nginx/conf.d/
+
+   ADD public /usr/share/nginx/html
+
+   WORKDIR /usr/share/nginx/html
+```
+
+
+C>Here we simply add our custom Nginx config and the public assets from the Laravel public directory into the Docker image. Each time you rebuild your front-end assets, you will need to re-build both the Laravel and Nginx images
+
+
+And the command to build them:
+
+
+```
+   # Building our Nginx Docker image and tagging it with the ECR URL
+   docker build -f Dockerfile-nginx -t YOUR_ECR_REGISTRY_URL_HERE:nginx .
+   docker push YOUR_ECR_REGISTRY_URL_HERE:nginx
+
+   # Building our Laravel Docker image and tagging it with the ECR URL
+   docker build -t YOUR_ECR_REGISTRY_URL_HERE:laravel .
+   docker push YOUR_ECR_REGISTRY_URL_HERE:laravel
+```
+
+Finally, we launch our web service with ECS.
+At the core level, task definitions describe which Docker images should be used to create containers, how containers should be linked together and which environment variables to run them with. At an higher level, an ECS service maintains a specified number of instances of a task definition simultaneously in an ECS cluster. The cluster is the pool of EC2 instances ie the infrastructure on which the tasks are hosted.
+
+
+```
+   Service:
+       Type: AWS::ECS::Service
+       DependsOn:
+         - ListenerRuleHTTPS
+       Properties:
+           Cluster: !Ref Cluster
+           Role: !Ref ServiceRole
+           DesiredCount: !Ref DesiredCount
+           TaskDefinition: !Ref TaskDefinition
+          LoadBalancers:
+              - ContainerName: nginx
+                ContainerPort: 80
+                TargetGroupArn: !Ref TargetGroup
+ 
+  ServiceRedirect:
+      Type: AWS::ECS::Service
+      DependsOn:
+        - ListenerRuleHTTP
+      Properties:
+          Cluster: !Ref Cluster
+          Role: !Ref ServiceRole
+          DesiredCount: 1
+          TaskDefinition: !Ref TaskDefinitionRedirectHTTPtoHTTPS
+          LoadBalancers:
+              - ContainerName: nginx-to-https
+                ContainerPort: 80
+                TargetGroupArn: !Ref TargetGroupRedirectHTTPSToHTTP
+ 
+  TaskDefinitionRedirectHTTPtoHTTPS:
+      Type: AWS::ECS::TaskDefinition
+      Properties:
+          Family: nginx-to-https
+          ContainerDefinitions:
+              - Name: nginx-to-https
+                Essential: true
+                Image: getlionel/nginx-to-https
+                Memory: 128
+                PortMappings:
+                  - ContainerPort: 80
+ 
+  TaskDefinition:
+      Type: AWS::ECS::TaskDefinition
+      Properties:
+          Family: laravel-nginx
+          ContainerDefinitions:
+              - Name: nginx
+                Essential: true
+                Image: !Join [ ".", [ !Ref "AWS::AccountId", "dkr.ecr", !Ref "AWS::Region", !Join [ ":", [ !Join [ "/", [ "amazonaws.com", !Ref ECR ] ], "nginx" ] ] ] ]
+                Memory: 128
+                PortMappings:
+                  - ContainerPort: 80
+                Links:
+                  - app
+                LogConfiguration:
+                  LogDriver: awslogs
+                  Options:
+                      awslogs-group: !Ref AWS::StackName
+                      awslogs-region: !Ref AWS::Region
+              - Name: app
+                Essential: true
+                Image: !Join [ ".", [ !Ref "AWS::AccountId", "dkr.ecr", !Ref "AWS::Region", !Join [ ":", [ !Join [ "/", [ "amazonaws.com", !Ref ECR ] ], "laravel" ] ] ] ]
+                Memory: 256
+                LogConfiguration:
+                  LogDriver: awslogs
+                  Options:
+                      awslogs-group: !Ref AWS::StackName
+                      awslogs-region: !Ref AWS::Region
+                Environment:
+                  - Name: APP_NAME
+                    Value: Laravel
+                  - Name: APP_ENV
+                    Value: production
+                  - Name: APP_DEBUG
+                    Value: false
+                  - Name: APP_LOG_LEVEL
+                    Value: error
+                  - Name: APP_KEY
+                    Value: base64:h2ASblVGbCXbC1buJ8KToZkKIEY69GSiutkAeGo77B0=
+                  - Name: APP_URL
+                    Value: !Ref APPURL
+                  - Name: DB_CONNECTION
+                    Value: !Ref DBCONNECTION
+                  - Name: DB_HOST
+                    Value: !Ref DBHOST
+                  - Name: DB_PORT
+                    Value: !Ref DBPORT
+                  - Name: DB_DATABASE
+                    Value: !Ref DBDATABASE
+                  - Name: DB_USERNAME
+                    Value: !Ref DBUSERNAME
+                  - Name: DB_PASSWORD
+                    Value: !Ref DBPASSWORD
+                  - Name: CACHE_DRIVER
+                    Value: file
+                  - Name: SESSION_DRIVER
+                    Value: database
+                  - Name: MAIL_DRIVER
+                    Value: !Ref MAILDRIVER
+                  - Name: MAIL_HOST
+                   Value: !Ref MAILHOST
+                 - Name: MAIL_PORT
+                   Value: !Ref MAILPORT
+                 - Name: MAIL_USERNAME
+                   Value: !Ref MAILUSERNAME
+                 - Name: MAIL_PASSWORD
+                   Value: !Ref MAILPASSWORD
+                 - Name: MAIL_FROM_ADDRESS
+                   Value: !Ref MAILFROMADDRESS
+                 - Name: MAIL_FROM_NAME
+                   Value: !Ref MAILFROMNAME
+ #                    - Name: ELASTICSEARCH_HOST
+ #                      Value: !Ref ELASTICSEARCHHOST
+ #                    - Name: ELASTICSEARCH_PORT
+ #                      Value: !Ref ELASTICSEARCHPORT
+                 - Name: FILESYSTEM_DRIVER
+                   Value: !Ref FILESYSTEMDRIVER
+                 - Name: AWS_REGION
+                   Value: !Sub ${AWS::Region}
+                 - Name: AWS_BUCKET
+                   Value: !Ref AWSBUCKET
+
+ CloudWatchLogsGroup:
+     Type: AWS::Logs::LogGroup
+     Properties:
+         LogGroupName: !Ref AWS::StackName
+         RetentionInDays: 365
+
+ TargetGroup:
+     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+     Properties:
+         VpcId: !Ref VPC
+         Port: 80
+         Protocol: HTTP
+         Matcher:
+             HttpCode: 200-301
+         HealthCheckIntervalSeconds: 10
+         HealthCheckPath: /
+         HealthCheckProtocol: HTTP
+         HealthCheckTimeoutSeconds: 5
+         HealthyThresholdCount: 2
+
+ TargetGroupRedirectHTTPSToHTTP:
+     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+     Properties:
+         VpcId: !Ref VPC
+         Port: 80
+         Protocol: HTTP
+         Matcher:
+             HttpCode: 200-301
+         HealthCheckIntervalSeconds: 10
+         HealthCheckPath: /
+         HealthCheckProtocol: HTTP
+         HealthCheckTimeoutSeconds: 5
+         HealthyThresholdCount: 2
+
+ ListenerRuleHTTP:
+     Type: AWS::ElasticLoadBalancingV2::ListenerRule
+     Properties:
+         ListenerArn: !Ref ListenerHTTP
+         Priority: 1
+         Conditions:
+             - Field: path-pattern
+               Values:
+                 - !Ref Path
+         Actions:
+             - TargetGroupArn: !Ref TargetGroupRedirectHTTPSToHTTP
+               Type: forward
+
+ ListenerRuleHTTPS:
+     Type: AWS::ElasticLoadBalancingV2::ListenerRule
+     Properties:
+         ListenerArn: !Ref ListenerHTTPS
+         Priority: 1
+         Conditions:
+             - Field: path-pattern
+               Values:
+                 - !Ref Path
+         Actions:
+             - TargetGroupArn: !Ref TargetGroup
+               Type: forward
+
+ # This IAM Role grants the service access to register/unregister with the
+ # Application Load Balancer (ALB). It is based on the default documented here:
+ # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/service_IAM_role.html
+ ServiceRole:
+     Type: AWS::IAM::Role
+     Properties:
+         RoleName: !Sub ecs-service-${AWS::StackName}
+         Path: /
+         AssumeRolePolicyDocument: |
+             {
+                 "Statement": [{
+                     "Effect": "Allow",
+                     "Principal": { "Service": [ "ecs.amazonaws.com" ]},
+                     "Action": [ "sts:AssumeRole" ]
+                 }]
+             }
+         Policies:
+             - PolicyName: !Sub ecs-service-${AWS::StackName}
+               PolicyDocument:
+                 {
+                     "Version": "2012-10-17",
+                     "Statement": [{
+                             "Effect": "Allow",
+                             "Action": [
+                                 "ec2:AuthorizeSecurityGroupIngress",
+                                 "ec2:Describe*",
+                                 "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                                 "elasticloadbalancing:Describe*",
+                                 "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                                 "elasticloadbalancing:DeregisterTargets",
+                                 "elasticloadbalancing:DescribeTargetGroups",
+                                 "elasticloadbalancing:DescribeTargetHealth",
+                                 "elasticloadbalancing:RegisterTargets"
+                             ],
+                             "Resource": "*"
+                     }]
+                 }
+```
+
+
+It will take a few seconds for our instances to be considered healthy by ELB so it starts directing traffic to them, and that what we see then:
+
+
+![](images/fig03.png)
+
+
+At least this is a Laravel page though displaying the default HTTP 500 error message. By checking Laravel logs which are streamed to CloudWatch, we see that we&rsquo;re missing the session table in the DB. So how can we now connect to one of our instances in the private subnets, across the internet, to run our database migrations?

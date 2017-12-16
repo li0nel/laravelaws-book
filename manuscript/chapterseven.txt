@@ -1,0 +1,92 @@
+# **7. Migrate DNS service to AWS Route53**
+
+
+If you have bought your domain name outside of AWS, you usually don&rsquo;t need to migrate either the registration or the DNS service to your AWS account. There is edge case though if you want your root domain (also known as APEX) to point to your load balancer. This needs a CNAME record which is not allowed for APEXs but AWS Route53 offers a special type of ALIAS records that lets you do just that.
+
+
+First we will migrate your DNS service to AWS:
+
+
+```
+   # create a hosted zone for AWS to select NS servers for your domain
+   aws route53 create-hosted-zone
+       --name laravelaws.com
+       --caller-reference random_string_here
+ 
+   # wait for the hosted zone to be created
+ 
+   # retrieve NS records
+   aws route53 get-hosted-zone
+          --id /hostedzone/YOUR_HOSTED_ZONE_ID
+ 
+   # the NS addresses in the response are the one to upload to your current domain name registrar
+   {
+      "HostedZone": {
+          "Id": "/hostedzone/YOUR_HOSTED_ZONE_ID",
+          "Name": "laravelaws.com.",
+          "CallerReference": "RISWorkflow-RD:824653d6-3f9d-415a-a2e8-8d6fa63fb4c8",
+          "Config": {
+              "Comment": "HostedZone created by Route53 Registrar",
+              "PrivateZone": false
+          },
+          "ResourceRecordSetCount": 6
+      },
+      "DelegationSet": {
+          "NameServers": [
+              "ns-1308.awsdns-03.org",
+              "ns-265.awsdns-32.com",
+              "ns-583.awsdns-08.net",
+              "ns-1562.awsdns-03.co.uk"
+          ]
+      }
+   }
+ 
+   # retrieve the TTL for your NS records.
+   # This is the maximum time it will take for all clients to point to Route53
+   # after you uploaded them to your current domain name registrar
+   dig laravelaws.com
+```
+
+
+Once the DNS service is assumed by Route53, we can create an ALIAS record to our ELB URL.
+
+
+```
+   # Add an ALIAS record to ELB URL
+   aws?route53 change-resource-record-sets?
+       --hosted-zone-id /hostedzone/YOUR_HOSTED_ZONE_ID
+       --change-batch '{
+      "Changes":[
+         {
+            "Action":"CREATE",
+            "ResourceRecordSet":{
+               "Name":"laravelaws.com.",
+              "Type":"A",
+              "AliasTarget":{
+                 "DNSName":"laravelaws2-1297867430.ap-southeast-2.elb.amazonaws.com",
+                 "EvaluateTargetHealth":true,
+                 "HostedZoneId":"YOUR_HOSTED_ZONE_ID"
+              }
+           }
+        }
+     ]
+   }'
+ 
+   # Track the propagation of the record
+   aws?route53 get-change?--id /change/YOUR_CHANGE_ID
+ 
+   # Test your record even before it is propagated
+   aws?route53 test-dns-answer
+          --hosted-zone-id /hostedzone/YOUR_HOSTED_ZONE_ID
+          --record-name laravelaws.com?
+          --record-type A
+```
+
+
+All done!
+
+
+![Domain name pointing to the load balancer, SSL certificate working](images/fig06.png)
+
+
+You are potentially done at this point. You can also improve your stack and deployment systems by following the steps below.

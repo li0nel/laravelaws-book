@@ -1,0 +1,662 @@
+# **4. Launch our CloudFormation stacks**
+
+
+Here comes the infrastructure-as-code! Our whole deployment will be described in one master YAML template, itself referencing *nested stacks* YAML templates to make it more readable and reusable. This is the directory structure of our templates:
+
+
+```no-highlight
+   |--- master.yaml
+   |--- infrastructure
+      |--- vpc.yaml
+      |--- storage.yaml
+      |--- web.yaml
+      |--- services.yaml
+*&ash; the root template*
+*&ash; our VPC and security groups*
+*&ash; our database cluster and S3 bucket*
+*&ash; our ECS cluster*
+*&ash; our ECS Tasks Definitions &amp; Services*
+```
+
+And the complete code can be downloaded from GitHub here:
+
+
+A>## **li0nel/laravelaws**
+A>
+A> laravelaws - A reference architecture to deploy Laravel on AWS
+A>
+A> github.com
+A>![](images/fig02.jpeg)
+
+
+The *vpc.yaml* template defines our *VPC subnets* and *route tables*:
+
+
+```
+   # This template creates a VPC and a pair public and private subnets spanning the first two AZs of your current region.
+   # Each instance in the public subnet can accessed the internet and be accessed from the internet
+   # thanks to a route table routing traffic through the Internet Gateway.
+   # Private subnets feature a NAT Gateway located in the public subnet of the same AZ, so they can receive traffic
+   # from within the VPC.
+   VPC:
+      Type: AWS::EC2::VPC
+      Properties:
+         CidrBlock: !Ref VpcCIDR
+         Tags:
+             - Key: Name
+               Value: !Ref EnvironmentName
+
+
+   InternetGateway:
+      Type: AWS::EC2::InternetGateway
+      Properties:
+         Tags:
+             - Key: Name
+               Value: !Ref EnvironmentName
+
+
+   InternetGatewayAttachment:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+         InternetGatewayId: !Ref InternetGateway
+         VpcId: !Ref VPC
+
+
+   PublicSubnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+         VpcId: !Ref VPC
+         AvailabilityZone: !Select [ 0, !GetAZs ]
+         CidrBlock: !Ref PublicSubnet1CIDR
+         MapPublicIpOnLaunch: true
+         Tags:
+             - Key: Name
+               Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+
+
+   PublicSubnet2:
+      Type: AWS::EC2::Subnet
+      Properties:
+         VpcId: !Ref VPC
+         AvailabilityZone: !Select [ 1, !GetAZs ]
+         CidrBlock: !Ref PublicSubnet2CIDR
+         MapPublicIpOnLaunch: true
+         Tags:
+             - Key: Name
+               Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
+
+
+   PrivateSubnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+         VpcId: !Ref VPC
+         AvailabilityZone: !Select [ 0, !GetAZs ]
+         CidrBlock: !Ref PrivateSubnet1CIDR
+         MapPublicIpOnLaunch: false
+         Tags:
+             - Key: Name
+               Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+
+
+   PrivateSubnet2:
+      Type: AWS::EC2::Subnet
+      Properties:
+         VpcId: !Ref VPC
+         AvailabilityZone: !Select [ 1, !GetAZs ]
+         CidrBlock: !Ref PrivateSubnet2CIDR
+         MapPublicIpOnLaunch: false
+         Tags:
+             - Key: Name
+               Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+
+
+   NatGateway1EIP:
+      Type: AWS::EC2::EIP
+      DependsOn: InternetGatewayAttachment
+      Properties:
+         Domain: vpc
+
+
+   NatGateway2EIP:
+      Type: AWS::EC2::EIP
+      DependsOn: InternetGatewayAttachment
+      Properties:
+         Domain: vpc
+
+
+   NatGateway1:
+      Type: AWS::EC2::NatGateway
+      Properties:
+         AllocationId: !GetAtt NatGateway1EIP.AllocationId
+         SubnetId: !Ref PublicSubnet1
+
+
+   NatGateway2:
+      Type: AWS::EC2::NatGateway
+      Properties:
+         AllocationId: !GetAtt NatGateway2EIP.AllocationId
+         SubnetId: !Ref PublicSubnet2
+
+
+   PublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+         VpcId: !Ref VPC
+         Tags:
+             - Key: Name
+               Value: !Sub ${EnvironmentName} Public Routes
+
+
+   DefaultPublicRoute:
+      Type: AWS::EC2::Route
+      DependsOn: InternetGatewayAttachment
+      Properties:
+         RouteTableId: !Ref PublicRouteTable
+         DestinationCidrBlock: 0.0.0.0/0
+         GatewayId: !Ref InternetGateway
+
+
+   PublicSubnet1RouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+         RouteTableId: !Ref PublicRouteTable
+         SubnetId: !Ref PublicSubnet1
+
+
+   PublicSubnet2RouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+         RouteTableId: !Ref PublicRouteTable
+         SubnetId: !Ref PublicSubnet2
+
+
+
+   PrivateRouteTable1:
+      Type: AWS::EC2::RouteTable
+      Properties:
+         VpcId: !Ref VPC
+         Tags:
+             - Key: Name
+               Value: !Sub ${EnvironmentName} Private Routes (AZ1)
+
+
+   DefaultPrivateRoute1:
+       Type: AWS::EC2::Route
+       Properties:
+       RouteTableId: !Ref PrivateRouteTable1
+       DestinationCidrBlock: 0.0.0.0/0
+       NatGatewayId: !Ref NatGateway1
+
+
+   PrivateSubnet1RouteTableAssociation:
+     Type: AWS::EC2::SubnetRouteTableAssociation
+     Properties:
+       RouteTableId: !Ref PrivateRouteTable1
+       SubnetId: !Ref PrivateSubnet1
+
+
+   PrivateRouteTable2:
+     Type: AWS::EC2::RouteTable
+     Properties:
+       VpcId: !Ref VPC
+       Tags:
+         - Key: Name
+         Value: !Sub ${EnvironmentName} Private Routes (AZ2)
+
+
+   DefaultPrivateRoute2:
+     Type: AWS::EC2::Route
+     Properties:
+       RouteTableId: !Ref PrivateRouteTable2
+       DestinationCidrBlock: 0.0.0.0/0
+       NatGatewayId: !Ref NatGateway2
+
+
+   PrivateSubnet2RouteTableAssociation:
+     Type: AWS::EC2::SubnetRouteTableAssociation
+     Properties:
+       RouteTableId: !Ref PrivateRouteTable2
+       SubnetId: !Ref PrivateSubnet2
+```
+
+
+This is quite verbose and everything it takes to set up public and private subnets spanning two AZs. You can see why you wouldn&rsquo;t want to implement this in the AWS console!
+
+
+We also need three SGs. The first one is to secure our EC2 instances and only allow inbound traffic coming from the load-balancer plus any SSH inbound traffic (remember our instances will be in a private subnet and won&rsquo;t be able to receive traffic from the internet anyway):
+
+
+```
+   # This security group defines who/where is allowed to access the ECS hosts directly.
+   # By default we're just allowing access from the load balancer.  If you want to SSH
+   # into the hosts, or expose non-load balanced services you can open their ports here.
+   ECSSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+          VpcId: !Ref VPC
+          GroupDescription: Access to the ECS hosts and the tasks/containers that run on them
+          SecurityGroupIngress:
+             # Only allow inbound access to ECS from the ELB
+             - SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+               IpProtocol: -1
+             - IpProtocol: tcp
+               CidrIp: 0.0.0.0/0
+               FromPort: '22'
+               ToPort: '22'
+         Tags:
+             - Key: Name
+               Value: !Sub ${EnvironmentName}-ECS-Hosts
+```
+
+
+The load balancer&rsquo;s SG will allow any traffic from the internet (while only responding to HTTP and HTTPS):
+
+
+```
+   # This security group defines who/where is allowed to access the Application Load Balancer.
+   # By default, we've opened this up to the public internet (0.0.0.0/0) but can you restrict
+   # it further if you want.
+   LoadBalancerSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+          VpcId: !Ref VPC
+          GroupDescription: Access to the load balancer that sits in front of ECS
+          SecurityGroupIngress:
+             # Allow access from anywhere to our ECS services
+             - CidrIp: 0.0.0.0/0
+               IpProtocol: -1
+         Tags:
+             - Key: Name
+               Value: !Sub ${EnvironmentName}-LoadBalancers
+```
+
+
+Finally, the database SG only allows ingress traffic on MySQL port and coming from our EC2 instances, and nothing from the internet. Our database will also be hosted inside our private subnets so it can&rsquo;t receive any traffic from outside the VPC.
+
+
+```
+   # This security group defines who/where is allowed to access the RDS instance.
+   # Only instances associated with our ECS security group can reach to the database endpoint.
+   DBSecurityGroup:
+     Type: AWS::EC2::SecurityGroup
+     Properties:
+         GroupDescription: Open database for access
+         VpcId: !Ref VPC
+         SecurityGroupIngress:
+             - IpProtocol: tcp
+              FromPort: '3306'
+              ToPort: '3306'
+              SourceSecurityGroupId: !Ref ECSSecurityGroup
+        Tags:
+            - Key: Name
+              Value: !Sub ${EnvironmentName}-DB-Host
+```
+
+
+Let&rsquo;s now launch our *storage.yaml* stack:
+
+
+```
+   # I recommend to encrypt your database to make sure your snapshots and logs are encrypted too.
+   # Automatic snapshots are stored by AWS itself, however manual snapshots will be stored in your S3 account.
+   # You don't want to accidentally open access to an unencrypted version of your data!
+   # It is also preferable not to use your default AWS master key if you ever need to transfer a snapshot to another
+   # AWS account later as you can't give cross-account access to your master key.
+   #
+   # Not that we only create one primary DB instance for now, no read replica.
+   KmsKey:
+       Type: AWS::KMS::Key
+      Properties:
+          Description: !Sub KMS Key for our ${AWS::StackName} DB
+          KeyPolicy:
+              Id: !Ref AWS::StackName
+              Version: "2012-10-17"
+              Statement:
+                  -
+
+                      Sid: "Allow administration of the key"
+                      Effect: "Allow"
+                      Action:
+                          - kms:Create*
+                          - kms:Describe*
+                          - kms:Enable*
+                          - kms:List*
+                          - kms:Put*
+                          - kms:Update*
+                          - kms:Revoke*
+                          - kms:Disable*
+                          - kms:Get*
+                          - kms:Delete*
+                          - kms:ScheduleKeyDeletion
+                          - kms:CancelKeyDeletion
+                      Principal:
+                          AWS: !Ref AWS::AccountId
+                      Resource: '*'
+
+                  -
+
+                      Sid: "Allow use of the key"
+                      Effect: "Allow"
+                      Principal:
+                          AWS: !Ref AWS::AccountId
+                      Action:
+                          - "kms:Encrypt"
+                          - "kms:Decrypt"
+                          - "kms:ReEncrypt*"
+                          - "kms:GenerateDataKey*"
+                          - "kms:DescribeKey"
+                      Resource: "*"
+ 
+
+  DatabaseSubnetGroup:
+      Type: AWS::RDS::DBSubnetGroup
+      Properties:
+          DBSubnetGroupDescription: CloudFormation managed DB subnet group.
+          SubnetIds: !Ref DatabaseSubnets
+ 
+
+  DatabaseCluster:
+      Type: AWS::RDS::DBCluster
+      Properties:
+          Engine: aurora
+          DatabaseName: !Ref DatabaseName
+          MasterUsername: !Ref DatabaseUsername
+          MasterUserPassword: !Ref DatabasePassword
+          BackupRetentionPeriod: 7
+          PreferredBackupWindow: 01:00-02:30
+          PreferredMaintenanceWindow: mon:03:00-mon:04:00
+          DBSubnetGroupName: !Ref DatabaseSubnetGroup
+          KmsKeyId: !GetAtt KmsKey.Arn
+          StorageEncrypted: true
+          VpcSecurityGroupIds:
+            - !Ref DatabaseSecurityGroup
+ 
+
+  DatabasePrimaryInstance:
+      Type: AWS::RDS::DBInstance
+      Properties:
+          Engine: aurora
+          DBClusterIdentifier: !Ref DatabaseCluster
+          DBInstanceClass: !Ref DatabaseInstanceType
+          DBSubnetGroupName: !Ref DatabaseSubnetGroup
+```
+
+
+Plus one public-read S3 bucket:
+
+
+```
+   # CloudFormation will generate one unique bucket name for us
+   # Nothing else to do!
+   Bucket:
+       Type: AWS::S3::Bucket
+       Properties:
+           AccessControl: PublicRead
+```
+
+
+The *web.yaml* stack is composed of one ECS cluster and a Launch Configuration for our instances. The LC defines the bootstrap code to execute on each new instance at launch, this is called the User Data. We use here a third-party Docker credential helper that authenticates the Docker client to our ECR registry by turning the instance&rsquo;s IAM role into security tokens.
+
+
+```
+   # This template defines our ECS cluster and its desired size.
+   # The Launch Configuration defines how each new instance in our cluster should be bootstrapped
+   # through its User Data
+   # The Metadata object gets EC2 instances to register in the ECS cluster
+   ECSCluster:
+       Type: AWS::ECS::Cluster
+       Properties:
+           ClusterName: !Ref EnvironmentName
+  
+  ECSAutoScalingGroup:
+      Type: AWS::AutoScaling::AutoScalingGroup
+      Properties:
+          VPCZoneIdentifier: !Ref PrivateSubnets
+          LaunchConfigurationName: !Ref ECSLaunchConfiguration
+          MinSize: !Ref ClusterSize
+          MaxSize: !Ref ClusterSize
+          DesiredCapacity: !Ref ClusterSize
+          Tags:
+              - Key: Name
+                Value: !Sub ${EnvironmentName} ECS host
+                PropagateAtLaunch: true
+      CreationPolicy:
+          ResourceSignal:
+              Timeout: PT15M
+      UpdatePolicy:
+          AutoScalingReplacingUpdate:
+              WillReplace: true
+          AutoScalingRollingUpdate:
+              MinInstancesInService: 1
+              MaxBatchSize: 1
+              PauseTime: PT15M
+              SuspendProcesses:
+                - HealthCheck
+                - ReplaceUnhealthy
+                - AZRebalance
+                - AlarmNotification
+                - ScheduledActions
+              WaitOnResourceSignals: true
+ 
+  ECSLaunchConfiguration:
+      Type: AWS::AutoScaling::LaunchConfiguration
+      Properties:
+          ImageId:  !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMI]
+          InstanceType: !Ref InstanceType
+          SecurityGroups:
+              - !Ref ECSSecurityGroup
+          IamInstanceProfile: !Ref ECSInstanceProfile
+          KeyName: laravelaws
+          UserData:
+              "Fn::Base64": !Sub |
+                  #!/bin/bash
+                  yum update -y
+                  yum install -y aws-cfn-bootstrap aws-cli go
+                  echo '{ "credsStore": "ecr-login" }' > ~/.docker/config.json
+                  go get -u github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/docker-credential-ecr-login
+                  cd /home/ec2-user/go/src/github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/docker-credential-ecr-login
+                  go build
+                  export PATH=$PATH:/home/ec2-user/go/bin
+                  /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+                  /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+      Metadata:
+          AWS::CloudFormation::Init:
+              config:
+                  commands:
+                      01_add_instance_to_cluster:
+                          command: !Sub echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+                  files:
+                      "/etc/cfn/cfn-hup.conf":
+                          mode: 000400
+                          owner: root
+                          group: root
+                          content: !Sub |
+                              [main]
+                              stack=${AWS::StackId}
+                              region=${AWS::Region}
+                      "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+                          content: !Sub |
+                              [cfn-auto-reloader-hook]
+                              triggers=post.update
+                              path=Resources.ECSLaunchConfiguration.Metadata.AWS::CloudFormation::Init
+                              action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+                  services:
+                      sysvinit:
+                          cfn-hup:
+                              enabled: true
+                              ensureRunning: true
+                              files:
+                                  - /etc/cfn/cfn-hup.conf
+                                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+```
+
+
+```
+   # This IAM Role is attached to all of the ECS hosts. It is based on the default role
+   # published here:
+   # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html
+   #
+   # You can add other IAM policy statements here to allow access from your ECS hosts
+   # to other AWS services. Please note that this role will be used by ALL containers
+   # running on the ECS host.
+   ECSRole:
+      Type: AWS::IAM::Role
+      Properties:
+          Path: /
+          RoleName: !Sub ${EnvironmentName}-ECSRole-${AWS::Region}
+          AssumeRolePolicyDocument: |
+              {
+                  "Statement": [{
+                      "Action": "sts:AssumeRole",
+                      "Effect": "Allow",
+                      "Principal": {
+                          "Service": "ec2.amazonaws.com"
+                      }
+                  }]
+              }
+          ManagedPolicyArns:
+              - "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+          Policies:
+              - PolicyName: ecs-service
+                PolicyDocument: |
+                  {
+                      "Statement": [{
+                          "Effect": "Allow",
+                          "Action": [
+                              "ecs:CreateCluster",
+                              "ecs:DeregisterContainerInstance",
+                              "ecs:DiscoverPollEndpoint",
+                              "ecs:Poll",
+                              "ecs:RegisterContainerInstance",
+                              "ecs:StartTelemetrySession",
+                              "ecs:Submit*",
+                              "logs:CreateLogStream",
+                              "logs:PutLogEvents",
+                              "ecr:BatchCheckLayerAvailability",
+                              "ecr:BatchGetImage",
+                              "ecr:GetDownloadUrlForLayer",
+                              "ecr:GetAuthorizationToken"
+                          ],
+                          "Resource": "*"
+                      }]
+                  }
+              - PolicyName: ec2-s3-write-access
+                PolicyDocument:
+                   Statement:
+                     - Effect: Allow
+                       Action:
+                         - s3:PutObject
+                         - s3:GetBucketAcl
+                         - s3:PutObjectTagging
+                         - s3:ListBucket
+                         - s3:PutObjectAcl
+                       Resource: !Sub arn:aws:s3:::${S3BucketName}/*
+              - PolicyName: ec2-cloudwatch-write-access
+                PolicyDocument:
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - logs:CreateLogStream
+                        - logs:PutLogEvents
+                        - logs:CreateLogGroup
+                      Resource: "*"
+ 
+  ECSInstanceProfile:
+      Type: AWS::IAM::InstanceProfile
+      Properties:
+          Path: /
+          Roles:
+              - !Ref ECSRole
+```
+
+
+```
+   # One Docker registry that we will use both for the Laravel application
+   # image and our Nginx image.
+   # Note that if you give a name to the repository, CloudFormation can't
+   # update it without a full replacement.
+   ECR:
+       Type: AWS::ECR::Repository
+       Properties:
+   #            RepositoryName: !Sub ${AWS::StackName}-nginx
+           RepositoryPolicyText:
+              Version: "2012-10-17"
+              Statement:
+                  -
+                    Sid: AllowPushPull
+                    Effect: Allow
+                    Principal:
+                      AWS:
+                        - !Sub arn:aws:iam::${AWS::AccountId}:role/${ECSRole}
+                    Action:
+                      - "ecr:GetDownloadUrlForLayer"
+                      - "ecr:BatchGetImage"
+                      - "ecr:BatchCheckLayerAvailability"
+                      - "ecr:PutImage"
+                      - "ecr:InitiateLayerUpload"
+                      - "ecr:UploadLayerPart"
+                      - "ecr:CompleteLayerUpload"
+```
+
+
+```
+   # One ALB with two listeners for HTTP and HTTPS
+   # The HTTP listener will pointed to a specific Nginx container redirecting traffic to HTTPS
+   # because neither ALB or ELB allow you to handle this through their configuration
+   LoadBalancer:
+       Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+       Properties:
+           Name: !Ref EnvironmentName
+           Subnets: !Ref PublicSubnets
+           SecurityGroups:
+              - !Ref LBSecurityGroup
+          Tags:
+              - Key: Name
+                Value: !Ref EnvironmentName
+ 
+
+  LoadBalancerListenerHTTP:
+      Type: AWS::ElasticLoadBalancingV2::Listener
+      Properties:
+          LoadBalancerArn: !Ref LoadBalancer
+          Port: 80
+          Protocol: HTTP
+          DefaultActions:
+              - Type: forward
+                TargetGroupArn: !Ref DefaultTargetGroup
+ 
+
+  LoadBalancerListenerHTTPS:
+      Type: AWS::ElasticLoadBalancingV2::Listener
+      Properties:
+          LoadBalancerArn: !Ref LoadBalancer
+          Port: 443
+          Protocol: HTTPS
+          Certificates:
+              - CertificateArn: !Ref LBCertificateArn
+          DefaultActions:
+              - Type: forward
+                TargetGroupArn: !Ref DefaultTargetGroup
+ 
+
+  # We define a default target group here, as this is a mandatory Parameters
+  # when creating an Application Load Balancer Listener. This is not used, instead
+  # a target group is created per-service in each service template (../services/*)
+  DefaultTargetGroup:
+      Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties:
+          Name: !Sub ${EnvironmentName}-default
+          VpcId: !Ref VPC
+          Port: 80
+          Protocol: HTTP
+
+```
+
+
+In more complex setups, we can have our freshly created load balancer registering itself to Route53 so that your service is always available at the same DNS address. This design pattern is called *service discovery* and is not possible in CloudFormation out of the box. Instead, we will manually point our domain name to our load-balancer on Route53 in step 7 below.
+
+
+In the meantime, our load balancer responds with an HTTP 503 error since it can&rsquo;t find a single healthy instance returning a correct HTTP status code in our cluster pool. Of course, this will change as soon as we deploy our application in our cluster.
+
+
+![Our load balancer responding but with no healthy container instances behind it](images/fig04.png)

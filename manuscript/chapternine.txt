@@ -1,0 +1,96 @@
+# **9. (Optional) Publish your Laravel workers and crons**
+
+
+Well done! Our Laravel application is now highly available in the cloud. This step will show how we can reuse our exact same Laravel Docker image to deploy our scheduled tasks and workers. They will run in their own containers and be managed by another ECS service so we can scale them independently to the *php-fpm* containers. We also make sure we have only a single instance of cron running, even if we have multiple front-end containers.
+
+
+For the worker jobs, we create an SQS queue using CloudFormation, for the front-end to dispatch jobs to our workers in the background:
+
+
+```
+   # That's all it takes to create a queue in CloudFormation
+   # CloudFormation will assign a unique name to it, that we
+   # will pass to our Laravel containers
+   Queue:
+       Type: AWS::SQS::Queue
+
+   # Then in the web.yaml stack, we update our ECSRole to grant
+   # our ECS instances access to this one queue we just created
+         - PolicyName: sqs-read-write-access
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:*
+                Resource: !GetAtt Queue.Arn
+```
+
+
+Finally we create two more tasks definitions in CloudFormation by starting from the same Laravel Docker image, same environment variables, but just overriding the Docker CMD (i.e. the command executed by Docker when the container starts):
+
+
+```
+   # The worker containers simply execute the Laravel artisan queue:work
+   # command instead of php-fpm
+   TaskDefinitionWorker:
+       Type: AWS::ECS::TaskDefinition
+       Properties:
+           Family: laravel-workers
+           ContainerDefinitions:
+               - Name: app
+                 Essential: true
+                Image: !Join [ ".", [ !Ref "AWS::AccountId", "dkr.ecr", !Ref "AWS::Region", !Join [ ":", [ !Join [ "/", [ "amazonaws.com", !Ref ECR ] ], "laravel" ] ] ] ]
+                Command:
+                  - "/bin/sh"
+                  - "-c"
+                  - "php artisan queue:work"
+                Memory: 128
+                LogConfiguration:
+                  LogDriver: awslogs
+                  Options:
+                      awslogs-group: !Ref AWS::StackName
+                      awslogs-region: !Ref AWS::Region
+                Environment:
+                  - Name: APP_NAME
+                    Value: Laravel
+                    ......
+ 
+  # The cron container command is a bit more intricate
+  # since we need to load the container's environment
+  # variables in the same console session context than cron
+  # for Laravel to use them
+  TaskDefinitionCron:
+      Type: AWS::ECS::TaskDefinition
+      Properties:
+          Family: laravel-cron
+          ContainerDefinitions:
+              - Name: app
+                Essential: true
+                Image: !Join [ ".", [ !Ref "AWS::AccountId", "dkr.ecr", !Ref "AWS::Region", !Join [ ":", [ !Join [ "/", [ "amazonaws.com", !Ref ECR ] ], "laravel" ] ] ] ]
+                EntryPoint:
+                  - /bin/bash
+                  - -c
+                Command:
+                  - env /bin/bash -o posix -c 'export -p' > /etc/cron.d/project_env.sh && chmod +x /etc/cron.d/project_env.sh && crontab /etc/cron.d/artisan-schedule-run && cron && tail -f /var/log/cron.log
+                Memory: 128
+                LogConfiguration:
+                  LogDriver: awslogs
+                  Options:
+                      awslogs-group: !Ref AWS::StackName
+                      awslogs-region: !Ref AWS::Region
+                Environment:
+                  - Name: APP_NAME
+                    Value: Laravel
+```
+
+
+The crontab file we use to call the artisan scheduler loads the container&rsquo;s environment variables in the cron console session. If you don&rsquo;t Laravel won&rsquo;t see your container&rsquo;s env vars when called from the cron.
+
+
+```
+   * * * * * root . /etc/cron.d/project_env.sh ; /usr/local/bin/php /var/www/html/artisan schedule:run &> /var/log/cron.log
+   # An empty line is required at the end of this file for a valid cron file.
+
+```
+
+That&rsquo;s it! We now have in our cluster a mix of Laravel front-end containers (*php-fpm* with Nginx as a reverse proxy), Laravel workers and one cron.
