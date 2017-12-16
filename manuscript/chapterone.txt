@@ -153,7 +153,8 @@ A> github.com
 ## The *vpc.yaml* template defines our *VPC subnets* and *route tables*:
 
 {title="Example 12: Creating a class in Ruby", lang=ruby}
-~~~~~~~~   
+
+```javascript
    VPC
    # This template creates a VPC and a pair public and private subnets spanning the first two AZs of your current region.
    # Each instance in the public subnet can accessed the internet and be accessed from the internet
@@ -339,4 +340,4 @@ A> github.com
      Properties:
        RouteTableId: !Ref PrivateRouteTable2
        SubnetId: !Ref PrivateSubnet2
-~~~~~~~~
+```
