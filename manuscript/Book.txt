@@ -4,6 +4,7 @@ chaptertwo.txt
 chapterthree.txt
 chapterfour.txt
 chapterfive.txt
+chaptersix.txt
 chapterseven.txt
 sample.txt
 Leanpub Book Format.md
