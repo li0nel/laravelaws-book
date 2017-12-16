@@ -47,14 +47,8 @@ It&rsquo;s not an easy task to setup a durable architecture for your web applica
 
 
 We will be deploying an empty Laravel application on a fresh domain name using Docker, CloudFormation and the AWS CLI. CloudFormation defines a templating language that can be used to describe all the AWS resources that are necessary for a workload. Templates are submitted to CloudFormation and the service will provision and configure those resources in appropriate order.
-
-
 Docker container images are stand-alone, executable packages of a piece of software that include everything needed to run it.
-
-
 With the AWS CLI, you can control all services from the command line and automate them through scripts.
-
-
 By combining all three, both our infrastructure and our application configuration can be written as code and as such be versioned, branched, documented.
 
 
