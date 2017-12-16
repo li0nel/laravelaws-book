@@ -127,7 +127,7 @@ Here comes the infrastructure-as-code! Our whole deployment will be described in
 
 This is the directory structure of our templates:
 
-```no-highlight
+```highlight
       |-- master.yaml
       |-- infrastructure
                  |-- vpc.yaml
@@ -148,7 +148,7 @@ A>
 A> laravelaws - A reference architecture to deploy Laravel on AWS
 A>
 A> github.com
-!(images/fig01.png)
+![](images/fig02.png)
 
 ## The *vpc.yaml* template defines our *VPC subnets* and *route tables*:
 
