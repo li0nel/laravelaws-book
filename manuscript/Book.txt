@@ -1,4 +1,5 @@
 intro.txt
+chapterone.txt
 sample.txt
 Leanpub Book Format.md
 Preface.md
