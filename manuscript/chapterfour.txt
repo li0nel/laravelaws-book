@@ -30,7 +30,7 @@ A> [github.com](https://github.com/)
 The *vpc.yaml* template defines our *VPC subnets* and *route tables*:
 
 
-<<[](code/four.rb)
+![](code/four.rb)
 
 
 <<[This Code Large Sample Has A Title](code/1.php)
