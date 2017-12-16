@@ -24,11 +24,6 @@ A>
 A> [github.com](https://github.com/)
 A> (images/fig02.jpeg)
 
-A> {width=60%,float=inside}
-A> ![](images/fig02.jpeg)
-
-A>![](images/fig02.jpeg)
-
 
 The *vpc.yaml* template defines our *VPC subnets* and *route tables*:
 
