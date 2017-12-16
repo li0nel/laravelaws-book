@@ -1,6 +1,0 @@
-   # CloudFormation will generate one unique bucket name for us
-   # Nothing else to do!
-   Bucket:
-       Type: AWS::S3::Bucket
-       Properties:
-           AccessControl: PublicRead
