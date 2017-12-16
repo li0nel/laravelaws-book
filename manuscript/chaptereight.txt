@@ -4,93 +4,24 @@
 Add a CloudFront distribution in your CloudFormation template and update your stack:
 
 
-```no-highlight
-   CloudFrontDistribution:
-       Type: AWS::CloudFront::Distribution
-       Properties:
-           DistributionConfig:
-               Origins:
-                   - DomainName: !Ref S3BucketDNSName
-                     Id: myS3Origin
-                     S3OriginConfig:
-                         OriginAccessIdentity: !Ref CloudFrontOAI
-              Enabled: 'true'
-              Aliases:
-                  - !Ref CDNAlias
-              DefaultCacheBehavior:
-                  Compress: 'true'
-                  AllowedMethods:
-                      - GET
-                      - HEAD
-                      - OPTIONS
-                  TargetOriginId: myS3Origin
-                  ForwardedValues:
-                      QueryString: 'false'
-                      Cookies:
-                         Forward: none
-                  ViewerProtocolPolicy: redirect-to-https
-              ViewerCertificate:
-                  AcmCertificateArn: !Ref CertificateArn
-```
+![](code/chaptereight1.rb)
+
 
 You will need to create beforehand a CloudFront Origin Access Identity, which is a special CloudFront user who will be able query objects in your S3 bucket:
 
 
-```no-highlight
-   aws cloudfront create-cloud-front-origin-access-identity
-       --cloud-front-origin-access-identity-config CallerReference=random_string_here,Comment=
-```
+![](code/chaptereight2.rb)
 
 
 Create an ALIAS record to point *files.yourdomain.com* to your CF distribution:
 
 
-```no-highlight
-   # Add an ALIAS record to ELB URL
-   aws?route53 change-resource-record-sets?
-       --hosted-zone-id /hostedzone/YOUR_HOSTED_ZONE_ID
-       --change-batch '{
-      "Changes":[
-         {
-            "Action":"CREATE",
-            "ResourceRecordSet":{
-               "Name":"files.laravelaws.com.",
-              "Type":"A",
-              "AliasTarget":{
-                 "DNSName":"d165d2lrm1x3fz.cloudfront.net",
-                 "EvaluateTargetHealth":true,
-                 "HostedZoneId":"YOUR_HOSTED_ZONE_ID"
-              }
-           }
-        }
-     ]
-   }'
-```
+![](code/chaptereight3.rb)
 
 
 Add a *sub_filter* Nginx directive to rewrite all URLs to your S3 buckets as links to your CF distribution instead.
 
 
-```no-highlight
-   location ~ \.php$ {
-       root /var/www/html/public;
-       fastcgi_cache cache_key;
-       fastcgi_cache_valid 200 204 1m;
-       fastcgi_ignore_headers Cache-Control;
-       fastcgi_no_cache $http_authorization $cookie_laravel_session;
-       fastcgi_cache_lock on;
-       fastcgi_cache_lock_timeout 10s;
-  
-       add_header X-Proxy-Cache $upstream_cache_status;
- 
-       sub_filter_types *;
-       sub_filter_once off;
-       sub_filter 'laravelaws-bucket-jjua0wgxhi7i.s3-ap-southeast-2.amazonaws.com' 'files.laravelaws.com';
- 
-       fastcgi_pass   app:9000;
-       fastcgi_index  index.php;
-       fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
-       fastcgi_read_timeout 900s;
-       include        fastcgi_params;
-   }
-```
+![](code/chaptereight4.rb)
+
+

@@ -4,70 +4,26 @@
 A bastion (also called jump box) is a temporary EC2 instance that we will place in a public subnet of our VPC. It will enable us to SSH into it from outside the VPC and from there still being able to access our instances (including database instances) in private subnets. When creating the bastion, make sure to associate to it the SG allowing access to the database.
 
 
-```no-highlight
-   aws ec2 run-instances
-       --image-id ami-c1a6bda2
-       --key-name laravelaws            # the SSH key pair we created earlier
-       --security-group-ids sg-xxxxxxxx # our previous SG allowing access to the DB
-       --subnet-id subnet-xxxxxxxx      # one of our public subnets
-       --count 1
-       --instance-type t2.micro         # the smallest instance type allowed
-       --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=bastion}]'
-```
-
-C>Launch one bastion, to be deleted once we&rsquo;re done.
+![](code/chaptersix1.rb)
 
 
-```no-highlight
-   # Add your key to your SSH agent
-   ssh-add -K laravelaws.pem
-
-   # Verify that your private key is successfully loaded in your local SSH agent
-   ssh-add –L
-
-   # Use the -A option to enable forwarding of the authentication agent connection
-   ssh –A ec2-user@<bastion-public-IP-address>
-
-   # Once you are connected to the bastion, you can SSH into a private subnet instance
-   # without copying any SSH key on the bastion
-   ssh ec2-user@<instance-private-IP-address>
-```
+C> `Launch one bastion, to be deleted once we&rsquo;re done.`
 
 
-C>You&rsquo;re now connected to an instance inside your VPC private subnets without copying keys around
+![](code/chaptersix2.rb)
 
 
-```no-highlight
-   # Use the Docker exec command to execute the Artisan commands inside the application container
-   docker exec -it CONTAINER_ID php artisan session:table
-   docker exec -it CONTAINER_ID php artisan migrate?--force
-```
+
+C> `You&rsquo;re now connected to an instance inside your VPC private subnets without copying keys around`
+
+
+![](code/chaptersix3.rb)
 
 
 The bastion can also be a host for a SSH tunnel between our machine and our public subnet so we can connect a local mysql/pgsql client to our remote database. Below is an example for PostgreSQL:
 
 
-```no-highlight
-   # create a SSH tunnel to RDS through your bastion:
-   ssh -L 54320:your_rds_database_endpoint_here.your_region_here.rds.amazonaws.com:5432
-       ec2-user@<bastion_public_ip>
-       -i ./laravelaws.pem
-  
-   # Your remote database is now accessible from port 54320 on your local machine
-   # I strongly recommend to create first thing a read-only user in your database
-   psql -h localhost -p 54320 -U postgres -W db_name_here
-   > CREATE ROLE lionel LOGIN PASSWORD 'a_unique_password_here';
-   > GRANT CONNECT ON DATABASE crvs TO lionel;
-   > GRANT USAGE ON SCHEMA public TO lionel;
-   > GRANT SELECT ON ALL TABLES IN SCHEMA public TO lionel;
-   > GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO lionel
- 
-   # You can then use pg_dump, pg_restore, or pgsql command line tools to create/restore a DB dump
-   pg_dump -h localhost -U lionel -W -p 54320 db_name_here > dump_db_name_here_$(date +"%m_%d_%Y").sql
- 
-   # Import it into a local database using:
-   psql -U lionel -w db_name_here -f dump_db_name_here_11_23_2017.sql
-```
+![](code/chaptersix4.rb)
 
 
 Back to our database migrations that we just ran. Here&rsquo;s how it looks now when connecting to the load balancer:

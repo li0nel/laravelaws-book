@@ -4,9 +4,7 @@
 Start with authenticating your command line by downloading the API key and secret for a new user in the IAM section of your AWS console. This user will need to have to have permissions to create resources for all the services we will use below. Follow the prompts from:
 
 
-```no-highlight
-   aws configure
-```
+![](code/chapterone.rb)
 
 
 C> `Use the profile option to save different credentials for different projects`

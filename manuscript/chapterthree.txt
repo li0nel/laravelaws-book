@@ -4,16 +4,8 @@
 It is recommended to create a new SSH key pair for all EC2 instances of this new project, still using the CLI:
 
 
-```no-highlight
-   # Create the key pair and extract the private key from the JSON response
-   aws ec2 create-key-pair
-       --key-name=laravelaws
-       --query 'KeyMaterial'
-       --output text > laravelaws.pem
-
-   # Assign appropriate permissions to the key file for it to be usable
-   chmod 400 laravelaws.pem
-```
+![](code/chapterthree.rb)
 
 
 Remember that AWS won&rsquo;t store SSH keys for you and you are responsible for storing and sharing them securely.
+

@@ -2,19 +2,12 @@
 As we discussed previously, we only have one database instance and no read replica in a separate AZ. You can add a replica in CloudFormation with the below template:
 
 
-```no-highlight
-   DatabaseReplicaInstance:
-       Type: AWS::RDS::DBInstance
-       DependsOn: DatabasePrimaryInstance
-       Properties:
-           Engine: aurora
-           DBClusterIdentifier: !Ref DatabaseCluster
-           DBInstanceClass: !Ref DatabaseInstanceType
-           DBSubnetGroupName: !Ref DatabaseSubnetGroup
-```
+![](code/chaptereleven1.rb)
 
 
 C> `Use the DependsOn directive to avoid your replica to be instantiated before and be promoted as the primary instance by Aurora`
 
 
 Note that Aurora only supports instances starting at db.r4.large size for PostgreSQL whereas Aurora MySQL does start at db.t2.small instances.
+
+

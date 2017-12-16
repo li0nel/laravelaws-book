@@ -4,11 +4,8 @@
 Once you&rsquo;re done experimenting, you can wind down all the resources you created through CloudFormation with one single command. Now you can be sure you did not forget an instance or NAT gateway somewhere silently adding up to your AWS bill.
 
 
-```no-highlight
-   aws cloudformation delete-stack --stack-name=laravelaws
-```
+![](code/chaptereighteen1.rb)
 
 
 I hope that was helpful and got you to adopt infrastructure-as-code. If it has been helpful, please comment, clap or share!
-
 
