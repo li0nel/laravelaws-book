@@ -6,7 +6,6 @@ Chapters contain sections, which is where the bulk of your content should be.  A
 
 This section will show how a code sample works.  Here is a code sample:
 
-<<(code/sample1.rb)
 
 Here is another sample:
 
