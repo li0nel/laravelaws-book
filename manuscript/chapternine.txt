@@ -1,0 +1,26 @@
+# **9. (Optional) Publish your Laravel workers and crons**
+
+
+Well done! Our Laravel application is now highly available in the cloud. This step will show how we can reuse our exact same Laravel Docker image to deploy our scheduled tasks and workers. They will run in their own containers and be managed by another ECS service so we can scale them independently to the *php-fpm* containers. We also make sure we have only a single instance of cron running, even if we have multiple front-end containers.
+
+
+For the worker jobs, we create an SQS queue using CloudFormation, for the front-end to dispatch jobs to our workers in the background:
+
+
+![](code/chapternine1.rb)
+
+
+Finally we create two more tasks definitions in CloudFormation by starting from the same Laravel Docker image, same environment variables, but just overriding the Docker CMD (i.e. the command executed by Docker when the container starts):
+
+
+![](code/chapternine2.rb)
+
+
+The crontab file we use to call the artisan scheduler loads the container&rsquo;s environment variables in the cron console session. If you don&rsquo;t Laravel won&rsquo;t see your container&rsquo;s env vars when called from the cron.
+
+
+![](code/chapternine3.rb)
+
+
+That&rsquo;s it! We now have in our cluster a mix of Laravel front-end containers (*php-fpm* with Nginx as a reverse proxy), Laravel workers and one cron.
+
