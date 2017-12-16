@@ -4,6 +4,7 @@ chaptertwo.txt
 chapterthree.txt
 chapterfour.txt
 chapterfive.txt
+chaptersix.txt
 chapterseven.txt
 chaptereight.txt
 chapternine.txt
