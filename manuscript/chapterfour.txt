@@ -22,9 +22,10 @@ A>
 A> laravelaws - A reference architecture to deploy Laravel on AWS
 A>
 A> [github.com](https://github.com/)
+A> {width=60%,float=inside}
+A> ![](images/fig02.jpeg)
 
-
-![](images/fig02.jpeg)
+A>![](images/fig02.jpeg)
 
 
 The *vpc.yaml* template defines our *VPC subnets* and *route tables*:
