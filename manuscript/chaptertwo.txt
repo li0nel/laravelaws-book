@@ -1,8 +1,0 @@
-# **2. Order SSL certificates**
-
-
-We need two certificates: one for our web application itself and another one for our custom domain on CloudFront. The one for your web application needs to be created in the AWS region you want to deploy your application into whereas CloudFront will only accept certificates generated in region *us-east-1*.
-AWS SSL/TLS certificates are free, automatically provisioned and renewed, even if you did not buy your domain in Route53. They seamlessly integrate with AWS load balancers, CloudFront distributions and API Gateway endpoints so you can just set them and forget them.
-
-
-![](code/chaptertwo.rb)
