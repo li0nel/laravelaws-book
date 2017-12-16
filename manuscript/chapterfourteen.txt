@@ -1,0 +1,7 @@
+# **14. (Optional) Auto scaling**
+
+
+Here we will use a combination of *CloudWatch* alarms, *ScalableTargets* and *ScalingPolicies* to trigger scaling of both our ECS cluster size and the desired number of container instances in our ECS. Scaling will happen both ways, so our infrastructure will typically be as light as possible at night and then scale up for peak times!
+
+
+*Coming soon*
