@@ -17,6 +17,5 @@ chapterfifteen.txt
 chaptersixteen.txt
 chapterseventeen.txt
 chaptereighteen.txt
-chapter1.txt
 Preface.md
 Leanpub Book Format.md
