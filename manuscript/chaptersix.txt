@@ -5,3 +5,17 @@ A bastion (also called jump box) is a temporary EC2 instance that we will place 
 
 
 ![](code/chaptersix1.rb)
+
+
+C> `Launch one bastion, to be deleted once we&rsquo;re done.`
+
+
+![](code/chaptersix2.rb)
+
+
+C> `You&rsquo;re now connected to an instance inside your VPC private subnets without copying keys around`
+
+
+![](code/chaptersix3.rb)
+
+
