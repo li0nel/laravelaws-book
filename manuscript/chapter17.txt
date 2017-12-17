@@ -1,10 +1,7 @@
-# **17. Cost containment**
+# 17. Cost containment
 
-
-If you are running this architecture at scale, there are a couple ways to contain your AWS bill. First you could point your application to the Aurora Read Replicas for read-only queries, to offload your primary instance and avoid to scale vertically too much.
-
+If you are running this architecture at scale, there are a couple ways to contain your AWS bill. First you could point your application to the Aurora Read Replicas for read-only queries, to offload your primary instance and avoid vertically scaling too much.
 
 Then you could commit to EC2 Reserved instances and pay for some of your instances cost upfront. Doing so can reduce your EC2 bill by as much as 75%. If your traffic fluctuates a lot throughout the day, you could have reserved instances running continuously and scale up with On-Demand instances during peak times.
 
-
-Finally, a more sophisticated approach would be to scale using EC2 Spot instances but it is only recommended for your background workloads as Spot instances can be terminated by AWS at a short notice.
+Finally, a more sophisticated approach would be to scale using EC2 Spot instances but it is only recommended for your background workload as Spot instances can be terminated by AWS at a short notice.

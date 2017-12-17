@@ -1,11 +1,7 @@
-# **18. (Optional) Deleting your stack and free resources**
+# 18. (Optional) Deleting your stack and free resources
 
+Once you’re done experimenting, you can wind down all the resources you created through CloudFormation with one single command. Now you can be sure you did not forget an instance or NAT gateway somewhere silently adding to your AWS bill.
 
-Once you&rsquo;re done experimenting, you can wind down all the resources you created through CloudFormation with one single command. Now you can be sure you did not forget an instance or NAT gateway somewhere silently adding up to your AWS bill.
-
-
-![](code/chaptereighteen1.rb)
-
+![](code/chapter18.sh)
 
 I hope that was helpful and got you to adopt infrastructure-as-code. If it has been helpful, please comment, clap or share!
-
