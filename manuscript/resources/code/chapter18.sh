@@ -1,1 +1,1 @@
-   aws cloudformation delete-stack --stack-name=laravelaws
+aws cloudformation delete-stack --stack-name=laravelaws

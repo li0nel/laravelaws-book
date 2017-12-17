@@ -2,7 +2,7 @@
 
 Add a CloudFront distribution in your CloudFormation template and update your stack:
 
-![](code/chapter8-1.sh)
+![](code/chapter8-1.yaml)
 
 You will need to create beforehand a CloudFront Origin Access Identity, which is a special CloudFront user who will be able query objects in your S3 bucket:
 

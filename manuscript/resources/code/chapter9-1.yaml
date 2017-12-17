@@ -1,15 +1,15 @@
-   # That's all it takes to create a queue in CloudFormation
-   # CloudFormation will assign a unique name to it, that we
-   # will pass to our Laravel containers
-   Queue:
-       Type: AWS::SQS::Queue
+# That's all it takes to create a queue in CloudFormation
+# CloudFormation will assign a unique name to it, that we
+# will pass to our Laravel containers
+Queue:
+   Type: AWS::SQS::Queue
 
-   # Then in the web.yaml stack, we update our ECSRole to grant
-   # our ECS instances access to this one queue we just created
-         - PolicyName: sqs-read-write-access
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action:
-                  - sqs:*
-                Resource: !GetAtt Queue.Arn
+# Then in the web.yaml stack, we update our ECSRole to grant
+# our ECS instances access to this one queue we just created
+     - PolicyName: sqs-read-write-access
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:*
+            Resource: !GetAtt Queue.Arn
