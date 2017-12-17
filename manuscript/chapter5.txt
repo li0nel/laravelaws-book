@@ -1,22 +1,22 @@
-# **5. Build and push your Laravel Docker image**
+# 5. Build and push your Laravel Docker image
 
 
 In the previous step, we created one ECR registry to store both the Docker image of our Laravel application and the one of our Nginx server. ECRs are standard Docker registries which you authenticate to using tokens, that the AWS CLI can generate for us:
 
 
-![](code/chapterfive1.rb)
+![](code/chapter5-1.sh)
 
 
 Below are the two Dockerfiles we use to build our Docker images:
 
 
-![](code/chapterfive2.rb)
+![](code/chapter5-2.sh)
 
 
 C> `We install *cron* here so we can reuse the same image for our Laravel scheduled tasks and our Laravel workers`
 
 
-![](code/chapterfive3.rb)
+![](code/chapter5-3.sh)
 
 
 C> `Here we simply add our custom Nginx config and the public assets from the Laravel public directory into the Docker image. Each time you rebuild your front-end assets, you will need to re-build both the Laravel and Nginx images`
@@ -25,22 +25,18 @@ C> `Here we simply add our custom Nginx config and the public assets from the La
 And the command to build them:
 
 
-![](code/chapterfive4.rb)
+![](code/chapter5-4.sh)
 
 
 Finally, we launch our web service with ECS.
 At the core level, task definitions describe which Docker images should be used to create containers, how containers should be linked together and which environment variables to run them with. At an higher level, an ECS service maintains a specified number of instances of a task definition simultaneously in an ECS cluster. The cluster is the pool of EC2 instances ie the infrastructure on which the tasks are hosted.
 
+![](code/chapter5-5.yaml)
 
-![](code/chapterfive5.rb)
-
-
-
-It will take a few seconds for our instances to be considered healthy by ELB so it starts directing traffic to them, and that what we see then:
+It will take a few seconds for our instances to be considered healthy by ELB so it starts directing traffic to them, and that what we see then is:
 
 
 ![](images/fig03.png)
 
-
-At least this is a Laravel page though displaying the default HTTP 500 error message. By checking Laravel logs which are streamed to CloudWatch, we see that we&rsquo;re missing the session table in the DB. So how can we now connect to one of our instances in the private subnets, across the internet, to run our database migrations?
+At least this is a Laravel page, though displaying the default HTTP 500 error message. By checking Laravel logs which are streamed to CloudWatch, we see that we’re missing the session table in the DB. So how can we now connect to one of our instances in the private subnets, across the internet, to run our database migrations?
 
