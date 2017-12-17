@@ -1,13 +1,10 @@
-# Introduction
-
-
-## A guide to networking, security, autoscaling and high-availability
+# Introduction: a guide to networking, security, autoscaling and high-availability
 
 
 It’s not an easy task to set up durable architecture for your web application. And if you try to build it as you go, you’ll soon get tired of clicking around the AWS console. What if you had one go-to architecture and repeatable process for all your projects, while ensuring maximum security, performance and availability? Here is how you should deploy your Laravel application on AWS.
 
 
-## How we will enforce security:
+## How we will enforce security
 
 
 - Create VPC *subnets* to deploy our application into. A VPC is your own virtual network within AWS and lets you design private subnets where instances can’t be accessed directly from outside your VPC. This is where we will deploy our web and database instances.
@@ -22,7 +19,7 @@ It’s not an easy task to set up durable architecture for your web application.
 - Simplify secret management by avoiding passwords where possible and instead specifying *IAM roles* to control access to our resources. Using IAM roles for EC2 removes the need to store AWS credentials in a configuration file. Roles use temporary security tokens under the hood which AWS takes care of rotating so we don’t have to worry about updating passwords.
 
 
-## How we will enforce high availability:
+## How we will enforce high availability
 
 
 - Span our application instances across *Availability Zones* (AZs below). An AZ is one or more data centers within a region that are designed to be isolated from failures in other AZs. By placing resources in separate AZs, organisations can protect their application from a service disruption impacting a single location
@@ -43,7 +40,7 @@ Preferably we will be using Amazon Aurora, which will maintain a read replica of
 ![Laravel, made highly available with almost a one-click deploy](images/fig01.png)
 
 
-## How we will build ourselves a repeatable process:
+## How we will build ourselves a repeatable process
 
 
 We will be deploying an empty Laravel application on a fresh domain name using Docker, CloudFormation and the AWS CLI. CloudFormation defines a templating language that can be used to describe all the AWS resources that are necessary for a workload. Templates are submitted to CloudFormation and the service will provision and configure those resources in appropriate order.
