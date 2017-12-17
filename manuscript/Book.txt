@@ -17,6 +17,3 @@ chapter15.txt
 chapter16.txt
 chapter17.txt
 chapter18.txt
-sample.txt
-Leanpub Book Format.md
-Preface.md
