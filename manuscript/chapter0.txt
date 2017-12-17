@@ -1,4 +1,4 @@
-# **Introduction**
+# Introduction
 
 
 ## A guide to networking, security, autoscaling and high-availability
