@@ -22,7 +22,7 @@ The bastion can also be a host for a SSH tunnel between our machine and our publ
 
 ![](code/chapter6-4.sh)
 
-Back to our database migrations that we just ran. Here’s how it looks now when connecting to the load balancer:
+Back to our database migrations that we just ran. Here's how it looks now when connecting to the load balancer:
 
 
 ![Laravel served through our load balancer URL](images/fig05.png)
