@@ -1,5 +1,6 @@
 # This security group defines who/where is allowed to access the RDS instance.
-# Only instances associated with our ECS security group can reach to the database endpoint.
+# Only instances associated with our ECS security group can reach to the
+# database endpoint.
 DBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:

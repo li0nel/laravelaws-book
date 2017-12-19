@@ -1,10 +1,12 @@
-# I recommend to encrypt your database to make sure your snapshots and logs are encrypted too.
-# Automatic snapshots are stored by AWS itself, however manual snapshots will be stored in your S3 account.
-# You don't want to accidentally open access to an unencrypted version of your data!
-# It is also preferable not to use your default AWS master key if you ever need to transfer a snapshot to another
-# AWS account later as you can't give cross-account access to your master key.
-#
-# Not that we only create one primary DB instance for now, no read replica.
+# I recommend to encrypt your database to make sure your snapshots and logs are
+# encrypted too.
+# Automatic snapshots are stored by AWS itself, however manual snapshots will be
+# stored in your S3 account.
+# You don't want to accidentally open access to an unencrypted version of you
+# data! It is also preferable not to use your default AWS master key if you
+# ever need to transfer a snapshot to another AWS account later as you can't
+# give cross-account access to your master key.
+# Note that we only create one primary DB instance for now, no read replica.
 KmsKey:
    Type: AWS::KMS::Key
    Properties:
