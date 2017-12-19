@@ -1,6 +1,6 @@
 # This template defines our ECS cluster and its desired size.
-# The Launch Configuration defines how each new instance in our cluster should be bootstrapped
-# through its User Data
+# The Launch Configuration defines how each new instance in our cluster should
+# be bootstrapped through its User Data.
 # The Metadata object gets EC2 instances to register in the ECS cluster
 ECSCluster:
    Type: AWS::ECS::Cluster

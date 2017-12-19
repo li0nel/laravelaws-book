@@ -1,6 +1,7 @@
 # One ALB with two listeners for HTTP and HTTPS
-# The HTTP listener will pointed to a specific Nginx container redirecting traffic to HTTPS
-# because neither ALB or ELB allow you to handle this through their configuration
+# The HTTP listener will pointed to a specific Nginx container redirecting
+# traffic to HTTPS because neither ALB or ELB allow you to handle this through
+# their configuration
 LoadBalancer:
    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
    Properties:
