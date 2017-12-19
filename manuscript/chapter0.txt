@@ -1,13 +1,13 @@
 # A guide to networking, security, autoscaling and high-availability
 
 
-It’s not an easy task to set up durable architecture for your web application. And if you try to build it as you go, you’ll soon get tired of clicking around the AWS console. What if you had one go-to architecture and repeatable process for all your projects, while ensuring maximum security, performance and availability? Here is how you should deploy your Laravel application on AWS.
+It's not an easy task to set up durable architecture for your web application. And if you try to build it as you go, you'll soon get tired of clicking around the AWS console. What if you had one go-to architecture and repeatable process for all your projects, while ensuring maximum security, performance and availability? Here is how you should deploy your Laravel application on AWS.
 
 
 **How we will enforce security:**
 
 
-- Create VPC *subnets* to deploy our application into. A VPC is your own virtual network within AWS and lets you design private subnets where instances can’t be accessed directly from outside your VPC. This is where we will deploy our web and database instances.
+- Create VPC *subnets* to deploy our application into. A VPC is your own virtual network within AWS and lets you design private subnets where instances can't be accessed directly from outside your VPC. This is where we will deploy our web and database instances.
 
 
 - Use temporary *bastions* (also called jump boxes) that we will deploy in our public subnets when we need to connect to web and database instances, reducing the surface of attack
@@ -16,7 +16,7 @@ It’s not an easy task to set up durable architecture for your web application.
 - Enforce firewalls rules by whitelisting which servers can talk to each other, using *VPC security groups (SGs)*. SGs are default-deny stateful firewalls applied at the instance level.
 
 
-- Simplify secret management by avoiding passwords where possible and instead specifying *IAM roles* to control access to our resources. Using IAM roles for EC2 removes the need to store AWS credentials in a configuration file. Roles use temporary security tokens under the hood which AWS takes care of rotating so we don’t have to worry about updating passwords.
+- Simplify secret management by avoiding passwords where possible and instead specifying *IAM roles* to control access to our resources. Using IAM roles for EC2 removes the need to store AWS credentials in a configuration file. Roles use temporary security tokens under the hood which AWS takes care of rotating so we don't have to worry about updating passwords.
 
 
 **How we will enforce high availability:**
@@ -48,4 +48,4 @@ Docker container images are stand-alone, executable packages of a piece of softw
 With the AWS CLI, you can control all services from the command line and automate them through scripts.
 By combining all three, both our infrastructure and our application configuration can be written as code and as such  be versioned, branched, documented.
 
-*This is the procedure I use to deploy my clients’ Laravel applications on AWS. I hope this can be helpful to deploy yours. If your use case is more complex, I provide on-going support packages ranging from mentoring your developers up to hands-on building your application on AWS. Ping me at [hi@getlionel.com](mailto:hi@getlionel.com)*
+*This is the procedure I use to deploy my clients' Laravel applications on AWS. I hope this can be helpful to deploy yours. If your use case is more complex, I provide on-going support packages ranging from mentoring your developers up to hands-on building your application on AWS. Ping me at [hi@getlionel.com](mailto:hi@getlionel.com)*

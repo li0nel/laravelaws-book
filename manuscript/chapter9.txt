@@ -10,8 +10,8 @@ Finally we create two more tasks definitions in CloudFormation by starting from 
 
 ![](code/chapter9-2.yaml)
 
-The crontab file we use to call the artisan scheduler loads the container’s environment variables in the cron console session. If you don’t, Laravel won’t see your container’s env vars when called from the cron.
+The crontab file we use to call the artisan scheduler loads the container's environment variables in the cron console session. If you don't, Laravel won't see your container's env vars when called from the cron.
 
 ![](code/chapter9-3.sh)
 
-That’s it! We now have in our cluster a mix of Laravel front-end containers (*php-fpm* with Nginx as a reverse proxy), Laravel workers and one cron.
+That's it! We now have in our cluster a mix of Laravel front-end containers (*php-fpm* with Nginx as a reverse proxy), Laravel workers and one cron.

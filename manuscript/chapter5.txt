@@ -37,5 +37,5 @@ It will take a few seconds for our instances to be considered healthy by ELB so 
 
 ![](images/fig03.png)
 
-At least this is a Laravel page, though displaying the default HTTP 500 error message. By checking Laravel logs which are streamed to CloudWatch, we see that we’re missing the session table in the DB. So how can we now connect to one of our instances in the private subnets, across the internet, to run our database migrations?
+At least this is a Laravel page, though displaying the default HTTP 500 error message. By checking Laravel logs which are streamed to CloudWatch, we see that we're missing the session table in the DB. So how can we now connect to one of our instances in the private subnets, across the internet, to run our database migrations?
 

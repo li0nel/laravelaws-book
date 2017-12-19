@@ -17,28 +17,28 @@ The *vpc.yaml* template defines our *VPC subnets* and *route tables*:
 ![](code/chapter4-2.yaml)
 
 
-This is quite verbose and is everything it takes to set up public and private subnets spanning two AZs. You can see why you wouldn’t want to implement this in the AWS console!
+This is quite verbose and is everything it takes to set up public and private subnets spanning two AZs. You can see why you wouldn't want to implement this in the AWS console!
 
 
-We also need three SGs. The first one is to secure our EC2 instances and only allow inbound traffic coming from the load-balancer plus any SSH inbound traffic (remember our instances will be in a private subnet and won’t be able to receive traffic from the internet anyway):
+We also need three SGs. The first one is to secure our EC2 instances and only allow inbound traffic coming from the load-balancer plus any SSH inbound traffic (remember our instances will be in a private subnet and won't be able to receive traffic from the internet anyway):
 
 
 ![](code/chapter4-3.yaml)
 
 
-The load balancer’s SG will allow any traffic from the internet (while only responding to HTTP and HTTPS):
+The load balancer's SG will allow any traffic from the internet (while only responding to HTTP and HTTPS):
 
 
 ![](code/chapter4-4.yaml)
 
 
-Finally, the database SG only allows ingress traffic on MySQL port and coming from our EC2 instances, and nothing from the internet. Our database will also be hosted inside our private subnets so it can’t receive any traffic from outside the VPC.
+Finally, the database SG only allows ingress traffic on MySQL port and coming from our EC2 instances, and nothing from the internet. Our database will also be hosted inside our private subnets so it can't receive any traffic from outside the VPC.
 
 
 ![](code/chapter4-5.yaml)
 
 
-Let’s now launch our *storage.yaml* stack:
+Let's now launch our *storage.yaml* stack:
 
 
 ![](code/chapter4-6.yaml)
@@ -50,7 +50,7 @@ Plus one public-read S3 bucket:
 ![](code/chapter4-7.yaml)
 
 
-The *web.yaml* stack is composed of one ECS cluster and a Launch Configuration for our instances. The LC defines the bootstrap code to execute on each new instance at launch, this is called the User Data. We use here a third-party Docker credential helper that authenticates the Docker client to our ECR registry by turning the instance’s IAM role into security tokens.
+The *web.yaml* stack is composed of one ECS cluster and a Launch Configuration for our instances. The LC defines the bootstrap code to execute on each new instance at launch, this is called the User Data. We use here a third-party Docker credential helper that authenticates the Docker client to our ECR registry by turning the instance's IAM role into security tokens.
 
 
 ![](code/chapter4-8.yaml)
@@ -68,7 +68,7 @@ The *web.yaml* stack is composed of one ECS cluster and a Launch Configuration f
 In more complex setups, we can have our freshly created load balancer registering itself to Route53 so that your service is always available at the same DNS address. This design pattern is called *service discovery* and is not possible out of the box in CloudFormation. Instead, we will manually point our domain name to our load-balancer on Route53 in step 7 below.
 
 
-In the meantime, our load balancer responds with an HTTP 503 error since it can’t find a single healthy instance returning a correct HTTP status code in our cluster pool. Of course, this will change as soon as we deploy our application in our cluster.
+In the meantime, our load balancer responds with an HTTP 503 error since it can't find a single healthy instance returning a correct HTTP status code in our cluster pool. Of course, this will change as soon as we deploy our application in our cluster.
 
 
 ![Our load balancer responding but with no healthy container instances behind it](images/fig04.png)

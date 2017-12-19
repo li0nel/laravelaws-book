@@ -1,6 +1,6 @@
 # 15. (Optional) Set up Continuous Deployment with CodePipeline
 
-This is where we’ll automate the building of our images from our GitHub repository. Once images are built and tested (using built-in Laravel unit and integration tests), they will be deployed in production without further clicking.
+This is where we'll automate the building of our images from our GitHub repository. Once images are built and tested (using built-in Laravel unit and integration tests), they will be deployed in production without further clicking.
 Containers will be replaced in sequence using a deployment pattern called Blue-Green deployment, so we get absolutely no downtime.
 
 *Coming soon*

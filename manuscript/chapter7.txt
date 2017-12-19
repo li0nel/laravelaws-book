@@ -1,6 +1,6 @@
 # 7. Migrate DNS service to AWS Route53
 
-If you have bought your domain name outside of AWS, you usually don’t need to migrate either the registration or the DNS service to your AWS account.
+If you have bought your domain name outside of AWS, you usually don't need to migrate either the registration or the DNS service to your AWS account.
 There is an edge case though if you want your root domain (also known as APEX) to point to your load balancer. This needs a CNAME record which is not allowed for APEXs but AWS Route53 offers a special type of ALIAS records that lets you do just that.
 
 First we will migrate our DNS service to AWS:

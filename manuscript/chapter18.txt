@@ -1,6 +1,6 @@
 # 18. (Optional) Deleting your stack and free resources
 
-Once you’re done experimenting, you can wind down all the resources you created through CloudFormation with one single command. Now you can be sure you did not forget an instance or NAT gateway somewhere silently adding to your AWS bill.
+Once you're done experimenting, you can wind down all the resources you created through CloudFormation with one single command. Now you can be sure you did not forget an instance or NAT gateway somewhere silently adding to your AWS bill.
 
 ![](code/chapter18.sh)
 
