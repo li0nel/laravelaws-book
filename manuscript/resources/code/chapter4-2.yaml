@@ -1,8 +1,10 @@
-# This template creates a VPC and a pair public and private subnets spanning the first two AZs of your current region.
-# Each instance in the public subnet can accessed the internet and be accessed from the internet
-# thanks to a route table routing traffic through the Internet Gateway.
-# Private subnets feature a NAT Gateway located in the public subnet of the same AZ, so they can receive traffic
-# from within the VPC.
+# This template creates a VPC and a pair public and private subnets spanning
+# the first two AZs of your current region.
+# Each instance in the public subnet can accessed the internet and be
+# accessed from the internet thanks to a route table routing traffic through
+# the Internet Gateway.
+# Private subnets feature a NAT Gateway located in the public subnet of the
+# same AZ, so they can receive traffic from within the VPC.
 VPC:
   Type: AWS::EC2::VPC
   Properties:
