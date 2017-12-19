@@ -4,4 +4,4 @@ It is recommended to create a new SSH key pair for all EC2 instances of this new
 
 ![](code/chapter3.sh)
 
-Remember that AWS won’t store SSH keys for you and you are responsible for storing and sharing them securely.
+Remember that AWS won't store SSH keys for you and you are responsible for storing and sharing them securely.
