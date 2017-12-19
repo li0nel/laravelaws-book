@@ -4,4 +4,4 @@ Once you're done experimenting, you can wind down all the resources you created 
 
 ![](code/chapter18.sh)
 
-I hope that was helpful and got you to adopt infrastructure-as-code. If it has been helpful, please comment, clap or share!
+I hope that was helpful and got you to adopt infrastructure-as-code. If it has been helpful, please send feedback or share!
