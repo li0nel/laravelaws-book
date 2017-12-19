@@ -4,6 +4,6 @@ As we discussed previously, we only have one database instance and no read repli
 
 ![](code/chapter11.yaml)
 
-C> `Use the DependsOn directive to avoid your replica to be instantiated before and be promoted as the primary instance by Aurora`
+*Use the DependsOn directive to avoid your replica to be instantiated before and be promoted as the primary instance by Aurora*
 
 Note that Aurora only supports instances starting at db.r4.large size for PostgreSQL whereas Aurora MySQL does start at db.t2.small instances.

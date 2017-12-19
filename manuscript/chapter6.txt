@@ -6,13 +6,13 @@ When creating the bastion, make sure to associate to it the SG allowing access t
 ![](code/chapter6-1.sh)
 
 
-C> `Launch one bastion, to be deleted once we&rsquo;re done.`
+*Launch one bastion, to be deleted once we're done.*
 
 
 ![](code/chapter6-2.sh)
 
 
-C> `You&rsquo;re now connected to an instance inside your VPC private subnets without copying keys around`
+*You're now connected to an instance inside your VPC private subnets without copying keys around*
 
 
 ![](code/chapter6-3.sh)

@@ -13,20 +13,19 @@ Below are the two Dockerfiles we use to build our Docker images:
 ![](code/chapter5-2.sh)
 
 
-C> `We install *cron* here so we can reuse the same image for our Laravel scheduled tasks and our Laravel workers`
+*We install cron here so we can reuse the same image for our Laravel scheduled tasks and our Laravel workers*
 
 
 ![](code/chapter5-3.sh)
 
 
-C> `Here we simply add our custom Nginx config and the public assets from the Laravel public directory into the Docker image. Each time you rebuild your front-end assets, you will need to re-build both the Laravel and Nginx images`
+*Here we simply add our custom Nginx config and the public assets from the Laravel public directory into the Docker image. Each time you rebuild your front-end assets, you will need to re-build both the Laravel and Nginx images*
 
 
 And the command to build them:
 
 
 ![](code/chapter5-4.sh)
-
 
 Finally, we launch our web service with ECS.
 At the core level, task definitions describe which Docker images should be used to create containers, how containers should be linked together and which environment variables to run them with. At an higher level, an ECS service maintains a specified number of instances of a task definition simultaneously in an ECS cluster. The cluster is the pool of EC2 instances ie the infrastructure on which the tasks are hosted.
